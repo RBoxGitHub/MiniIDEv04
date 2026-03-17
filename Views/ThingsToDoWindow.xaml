@@ -1,0 +1,190 @@
+<Window x:Class="MiniIDEv04.Views.ThingsToDoWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
+        Title="📝 Things To Do"
+        Width="1000" Height="560"
+        MinWidth="700" MinHeight="400"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        ResizeMode="CanResizeWithGrip">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>  <!-- DB path bar -->
+            <RowDefinition Height="Auto"/>  <!-- Quick-add bar -->
+            <RowDefinition Height="Auto"/>  <!-- Filter pills -->
+            <RowDefinition Height="*"/>     <!-- Grid -->
+            <RowDefinition Height="Auto"/>  <!-- Footer / close -->
+        </Grid.RowDefinitions>
+
+        <!-- ── DB Path bar ──────────────────────────────────────────────── -->
+        <Grid Grid.Row="0" Margin="8,8,8,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       Text="DB Path:"
+                       VerticalAlignment="Center"
+                       FontSize="11" FontWeight="SemiBold"
+                       Margin="0,0,6,0"/>
+            <telerik:RadWatermarkTextBox Grid.Column="1"
+                       x:Name="DbPathTextBox"
+                       WatermarkContent="ProjectNotes/miniIDE.db"
+                       FontSize="11"
+                       IsReadOnly="True"
+                       VerticalContentAlignment="Center"
+                       Margin="0,0,4,0"/>
+            <telerik:RadButton Grid.Column="2"
+                       Content="📁 Browse"
+                       FontSize="11"
+                       Margin="0,0,4,0"
+                       Click="BrowseDbPath_Click"
+                       ToolTip="Browse to a different miniIDE.db file"/>
+            <telerik:RadButton Grid.Column="3"
+                       Content="↺ Reset"
+                       FontSize="11"
+                       Click="ResetDbPath_Click"
+                       ToolTip="Reset to default ProjectNotes/miniIDE.db"/>
+        </Grid>
+
+        <!-- ── Quick-add bar ────────────────────────────────────────────── -->
+        <Grid Grid.Row="1" Margin="8,0,8,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <telerik:RadWatermarkTextBox Grid.Column="0"
+                x:Name="NoteTextBox"
+                WatermarkContent="Drop a thought here..."
+                Background="#FFF0F8FF"
+                FontSize="11"
+                Margin="0,0,4,0"/>
+            <telerik:RadComboBox Grid.Column="1"
+                x:Name="PhaseCombo"
+                SelectedIndex="0"
+                ToolTip="Phase" Margin="0,0,4,0">
+                <telerik:RadComboBoxItem Content="Phase 1"/>
+                <telerik:RadComboBoxItem Content="Phase 2"/>
+                <telerik:RadComboBoxItem Content="Phase 3"/>
+                <telerik:RadComboBoxItem Content="Phase 4"/>
+            </telerik:RadComboBox>
+            <telerik:RadComboBox Grid.Column="2"
+                x:Name="PriorityCombo"
+                SelectedIndex="1"
+                ToolTip="Priority" Margin="0,0,4,0">
+                <telerik:RadComboBoxItem Content="High"/>
+                <telerik:RadComboBoxItem Content="Normal"/>
+                <telerik:RadComboBoxItem Content="Low"/>
+            </telerik:RadComboBox>
+            <telerik:RadButton Grid.Column="3"
+                Content="+ Add"
+                Style="{StaticResource AddButtonStyle}"
+                Click="AddNote_Click"/>
+        </Grid>
+
+        <!-- ── Filter pills ─────────────────────────────────────────────── -->
+        <WrapPanel Grid.Row="2" Margin="8,0,8,6">
+            <ToggleButton x:Name="FilterOpen"   Content="Open only" Style="{StaticResource FilterToggleStyle}" Margin="0,0,4,0" Checked="Filter_Changed" Unchecked="Filter_Changed"/>
+            <ToggleButton x:Name="FilterHigh"   Content="High"      Style="{StaticResource FilterToggleStyle}" Margin="0,0,4,0" Checked="Filter_Changed" Unchecked="Filter_Changed"/>
+            <ToggleButton x:Name="FilterPh1"    Content="Ph 1"      Style="{StaticResource FilterToggleStyle}" Margin="0,0,4,0" Checked="Filter_Changed" Unchecked="Filter_Changed"/>
+            <ToggleButton x:Name="FilterPh2"    Content="Ph 2"      Style="{StaticResource FilterToggleStyle}" Margin="0,0,4,0" Checked="Filter_Changed" Unchecked="Filter_Changed"/>
+            <ToggleButton x:Name="FilterPh3"    Content="Ph 3"      Style="{StaticResource FilterToggleStyle}" Margin="0,0,4,0" Checked="Filter_Changed" Unchecked="Filter_Changed"/>
+            <ToggleButton x:Name="FilterPh4"    Content="Ph 4"      Style="{StaticResource FilterToggleStyle}" Margin="0,0,12,0" Checked="Filter_Changed" Unchecked="Filter_Changed"/>
+            <TextBlock x:Name="RecordCountText"
+                       VerticalAlignment="Center"
+                       FontSize="11"
+                       Foreground="#FF666666"/>
+        </WrapPanel>
+
+        <!-- ── RadGridView ──────────────────────────────────────────────── -->
+        <telerik:RadGridView Grid.Row="3"
+            x:Name="NotesGrid"
+            Margin="8,0,8,0"
+            AutoGenerateColumns="False"
+            telerik:StyleManager.Theme="Windows11"
+            AlternateRowBackground="#FFE8F4FD"
+            AlternationCount="2"
+            GroupRowStyle="{StaticResource BlueGroupRowStyle}"
+            CanUserFreezeColumns="False"
+            IsReadOnly="False"
+            RowIndicatorVisibility="Collapsed"
+            SelectionMode="Single"
+            RowEditEnded="NotesGrid_RowEditEnded">
+            <telerik:RadGridView.Columns>
+                <telerik:GridViewColumn Header="Del" Width="46">
+                    <telerik:GridViewColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="🗑"
+                                    FontSize="11"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    ToolTip="Delete this note"
+                                    Click="DeleteNote_Click"
+                                    Tag="{Binding Id}"/>
+                        </DataTemplate>
+                    </telerik:GridViewColumn.CellTemplate>
+                </telerik:GridViewColumn>
+                <telerik:GridViewCheckBoxColumn
+                    DataMemberBinding="{Binding IsComplete}"
+                    Header="Done" Width="50"/>
+                <telerik:GridViewDataColumn
+                    DataMemberBinding="{Binding Phase}"
+                    Header="Ph" Width="42"/>
+                <telerik:GridViewDataColumn
+                    DataMemberBinding="{Binding Priority}"
+                    Header="Pri" Width="42"/>
+                <telerik:GridViewDataColumn
+                    DataMemberBinding="{Binding SideNote}"
+                    Header="Note" Width="*"/>
+                <telerik:GridViewDataColumn
+                    DataMemberBinding="{Binding ReferenceObject}"
+                    Header="Ref Object" Width="140"/>
+                <telerik:GridViewDataColumn
+                    DataMemberBinding="{Binding TypeReference}"
+                    Header="Type Reference" Width="210"/>
+                <telerik:GridViewDataColumn
+                    DataMemberBinding="{Binding FileName}"
+                    Header="File" Width="160"/>
+                <telerik:GridViewDataColumn
+                    DataMemberBinding="{Binding FilePath}"
+                    Header="Path" Width="200"/>
+                <telerik:GridViewDataColumn
+                    DataMemberBinding="{Binding CreatedAt, StringFormat='{}{0:MM/dd HH:mm}'}"
+                    Header="Created" Width="110" IsReadOnly="True"/>
+            </telerik:RadGridView.Columns>
+        </telerik:RadGridView>
+
+        <!-- ── Footer ───────────────────────────────────────────────────── -->
+        <Border Grid.Row="4"
+                Background="#FFF5F5F5"
+                BorderBrush="#FFE0E0E0"
+                BorderThickness="0,1,0,0"
+                Padding="8,6">
+            <DockPanel>
+                <telerik:RadButton DockPanel.Dock="Right"
+                    Content="Close"
+                    Width="80"
+                    Margin="8,0,0,0"
+                    Click="Close_Click"/>
+                <telerik:RadButton DockPanel.Dock="Right"
+                    x:Name="SaveChangesButton"
+                    Content="💾 Save Changes"
+                    Style="{StaticResource AddButtonStyle}"
+                    Click="SaveChanges_Click"/>
+                <TextBlock x:Name="StatusText"
+                    VerticalAlignment="Center"
+                    FontSize="11"
+                    Foreground="#FF555555"
+                    Text="Ready"/>
+            </DockPanel>
+        </Border>
+
+    </Grid>
+</Window>

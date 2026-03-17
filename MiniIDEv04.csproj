@@ -1,0 +1,144 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>MiniIDEv04</RootNamespace>
+    <AssemblyName>MiniIDEv04</AssemblyName>
+    <Version>4.0.0</Version>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDefaultItems>False</EnableDefaultItems>
+  </PropertyGroup>
+
+  <!-- ── ProjectNotes — visible in Solution Explorer, never compiled ── -->
+  <ItemGroup>
+    <None Include="ProjectNotes\**\*">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <Compile          Remove="ProjectNotes\**" />
+    <EmbeddedResource Remove="ProjectNotes\**" />
+    <Content          Remove="ProjectNotes\**" />
+  </ItemGroup>
+
+  <!-- ── NuGet packages ──────────────────────────────────────────────── -->
+  <ItemGroup>
+    <!-- Telerik — local install feed (NuGet.Config points to local path) -->
+    <PackageReference Include="Telerik.UI.for.Wpf.80.Xaml"     Version="2026.1.211" />
+
+    <!-- SQLite — local sys_ tables only, never SQL Server -->
+    <PackageReference Include="sqlite-net-pcl"                  Version="1.9.172" />
+    <PackageReference Include="SQLitePCLRaw.bundle_green"       Version="2.1.10" />
+
+    <!-- MVVM -->
+    <PackageReference Include="CommunityToolkit.Mvvm"           Version="8.3.2" />
+
+    <!-- Roslyn — wired in Phase 3 -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp"   Version="4.12.0" />
+  </ItemGroup>
+
+  <!-- ── Application + Pages ─────────────────────────────────────────── -->
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+
+    <Page Include="Views\MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\ThingsToDoWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\SysManagerWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\DraggablePanel.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\QuickAddPanelControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+
+  <!-- ── C# source files ─────────────────────────────────────────────── -->
+  <ItemGroup>
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+
+    <!-- Controls -->
+    <Compile Include="Controls\IDraggablePanel.cs" />
+    <Compile Include="Controls\PanelDragBehavior.cs" />
+    <Compile Include="Controls\DraggablePanel.xaml.cs">
+      <DependentUpon>DraggablePanel.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Controls\QuickAddPanelControl.xaml.cs">
+      <DependentUpon>QuickAddPanelControl.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+
+    <!-- Data -->
+    <Compile Include="Data\ProjectDatabase.cs" />
+    <Compile Include="Data\Interfaces\IRepository.cs" />
+    <Compile Include="Data\Interfaces\IThingsToDoRepository.cs" />
+    <Compile Include="Data\Interfaces\ISysPanelRepository.cs" />
+    <Compile Include="Data\Interfaces\IAppSettingsRepository.cs" />
+    <Compile Include="Data\Interfaces\ISysControlRepository.cs" />
+    <Compile Include="Data\Sqlite\SqliteThingsToDoRepository.cs" />
+    <Compile Include="Data\Sqlite\SqliteSysPanelRepository.cs" />
+    <Compile Include="Data\Sqlite\SqliteAppSettingsRepository.cs" />
+    <Compile Include="Data\Sqlite\SqliteSysControlRepository.cs" />
+
+    <!-- Models -->
+    <Compile Include="Models\ThingsToDo.cs" />
+    <Compile Include="Models\SysPanel.cs" />
+    <Compile Include="Models\SysAppSetting.cs" />
+    <Compile Include="Models\SysControl.cs" />
+    <Compile Include="Models\SysControlProperty.cs" />
+    <Compile Include="Models\KnownControlType.cs" />
+
+    <!-- Services -->
+    <Compile Include="Services\PanelManagerService.cs" />
+    <Compile Include="Services\ControlTypeRegistry.cs" />
+
+    <!-- Converters -->
+    <Compile Include="Converters\IntOffsetConverter.cs" />
+
+    <!-- ViewModels -->
+    <Compile Include="ViewModels\ProjectViewModel.cs" />
+
+    <!-- Views -->
+    <Compile Include="Views\MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Views\ThingsToDoWindow.xaml.cs">
+      <DependentUpon>ThingsToDoWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Views\SysManagerWindow.xaml.cs">
+      <DependentUpon>SysManagerWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+
+  <!-- ── Images ──────────────────────────────────────────────────────────── -->
+  <ItemGroup>
+    <Resource Include="Images\wrench.svg"/>
+  </ItemGroup>
+
+  <!-- ── Seed SQL (visible in Solution Explorer, not compiled) ────────── -->
+  <ItemGroup>
+    <None Include="Data\seed_handoff_entry.sql" />
+  </ItemGroup>
+
+</Project>
