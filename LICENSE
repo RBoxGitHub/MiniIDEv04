@@ -1,0 +1,67 @@
+Business Source License 1.1
+
+Licensor:             RBoxGitHub
+Licensed Work:        MiniIDEv04 — WPF Runtime IDE
+                      Copyright (C) 2026 RBoxGitHub
+Additional Use Grant: You may use the Licensed Work for any non-commercial
+                      purpose, including personal projects, education, and
+                      research, free of charge.
+Change Date:          2030-01-01
+Change License:       MIT License
+
+-----------------------------------------------------------------------------
+
+TERMS AND CONDITIONS
+
+1. Grant of Rights
+
+   The Licensor hereby grants you the right to copy, modify, create derivative
+   works, redistribute, and make non-production use of the Licensed Work. The
+   Licensor may make an Additional Use Grant, above, permitting limited
+   production use.
+
+2. Restrictions
+
+   You may not use the Licensed Work for Commercial Purposes without obtaining
+   a separate commercial license from the Licensor.
+
+   "Commercial Purposes" means use of the Licensed Work, in whole or in part,
+   in any product or service that is sold, licensed, or otherwise offered for
+   commercial gain, including but not limited to:
+     - Incorporating the Licensed Work into a commercial software product
+     - Offering the Licensed Work as a hosted or managed service for a fee
+     - Using the Licensed Work to provide consulting, development, or other
+       services to third parties for compensation
+
+   To obtain a commercial license, contact: RBoxGitHub via GitHub at
+   https://github.com/RBoxGitHub
+
+3. Notice
+
+   You must preserve this notice in all copies or substantial portions of the
+   Licensed Work, and you must include the following attribution in any
+   distribution or derivative work:
+
+       Based on MiniIDEv04 by RBoxGitHub — https://github.com/RBoxGitHub/MiniIDEv04
+
+4. Conversion to Open Source
+
+   On the Change Date specified above (2030-01-01), the Licensed Work will
+   automatically become available under the Change License (MIT License)
+   specified above. From that date forward, the Change License terms apply
+   in place of this License.
+
+5. No Warranty
+
+   THE LICENSED WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+   IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING
+   FROM, OUT OF, OR IN CONNECTION WITH THE LICENSED WORK OR THE USE OR OTHER
+   DEALINGS IN THE LICENSED WORK.
+
+-----------------------------------------------------------------------------
+
+For commercial licensing inquiries, contact RBoxGitHub via GitHub:
+https://github.com/RBoxGitHub
