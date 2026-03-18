@@ -1,0 +1,4 @@
+[
+  { "file": "DropZoneWindow.xaml",    "destination": "Views\\" },
+  { "file": "DropZoneWindow.xaml.cs", "destination": "Views\\" }
+]

@@ -1,4 +1,5 @@
 using MiniIDEv04.Controls;
+using MiniIDEv04.Services;
 using MiniIDEv04.ViewModels;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,6 +10,8 @@ namespace MiniIDEv04.Views
     {
         private ProjectViewModel _vm => (ProjectViewModel)DataContext;
 
+        private readonly Dictionary<string, IDraggablePanel> _panels = new();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -18,32 +21,52 @@ namespace MiniIDEv04.Views
         {
             base.OnContentRendered(e);
             await _vm.InitializeAsync();
-            RestorePanelPositions();
+            SpawnPanelsFromDb();
         }
 
-        // ── Panel position restore ────────────────────────────────────────
+        // ── Dynamic panel spawn ───────────────────────────────────────────
 
-        private void RestorePanelPositions()
+        private void SpawnPanelsFromDb()
         {
-            foreach (var panelVm in _vm.PanelManager.Panels)
-            {
-                var panel = FindPanel(panelVm.PanelKey);
-                if (panel is null) continue;
+            FloatingCanvas.Children.Clear();
+            _panels.Clear();
 
-                Canvas.SetLeft((UIElement)panel, panelVm.PosLeft);
-                Canvas.SetTop((UIElement)panel,  panelVm.PosTop);
-                panel.Width            = panelVm.PanelWidth;
-                panel.MinHeight        = panelVm.PanelHeight;
-                panel.TitleBarBrush    = panelVm.TitleBarBrush;
-                panel.Visibility       = panelVm.IsVisible
-                    ? Visibility.Visible : Visibility.Collapsed;
-                panel.IsHitTestVisible = panelVm.IsVisible;
+            // Use _model to get SortOrder and full SysPanel data
+            foreach (var panelVm in _vm.PanelManager.Panels
+                         .OrderBy(p => p._model.SortOrder))
+            {
+                var control = PanelControlFactory.Create(panelVm._model);
+                if (control is null) continue;
+
+                var fe = (UIElement)control;
+                Canvas.SetLeft(fe, panelVm.PosLeft);
+                Canvas.SetTop(fe,  panelVm.PosTop);
+
+                control.PositionChanged  += Panel_PositionChanged;
+                control.DraggingPosition += Panel_DraggingPosition;
+
+                if (control is SysManagerLauncherControl launcher)
+                    launcher.PanelDoubleClicked += Panel_DoubleClicked;
+                else if (control is SysManagerPanelControl sysPanel)
+                    sysPanel.PanelDoubleClicked += Panel_DoubleClicked;
+                else if (control is GitHubLauncherControl ghLauncher)
+                    ghLauncher.PanelDoubleClicked += Panel_DoubleClicked;
+                else if (control is DropZoneLauncherControl dzLauncher)
+                    dzLauncher.PanelDoubleClicked += Panel_DoubleClicked;
+
+                if (fe is FrameworkElement fwe)
+                    fwe.DataContext = _vm;
+
+                FloatingCanvas.Children.Add(fe);
+                _panels[panelVm.PanelKey] = control;
             }
+
+            _vm.StatusMessage = $"{_vm.AppVersion} ready  —  {_vm.ThingsToDo.Count(t => !t.IsComplete)} open notes";
         }
 
         // ── Panel event handlers ──────────────────────────────────────────
 
-        private async void Panel_PositionChanged(object sender, PanelPositionArgs e)
+        private async void Panel_PositionChanged(object? sender, PanelPositionArgs e)
         {
             var key = (sender as IDraggablePanel)?.PanelKey;
             if (key is null) return;
@@ -51,25 +74,13 @@ namespace MiniIDEv04.Views
             _vm.StatusMessage = $"{_vm.AppVersion} ready  —  {_vm.ThingsToDo.Count(t => !t.IsComplete)} open notes";
         }
 
-        private void Panel_DraggingPosition(object sender, PanelPositionArgs e)
+        private void Panel_DraggingPosition(object? sender, PanelPositionArgs e)
         {
             var title = (sender as IDraggablePanel)?.PanelTitle ?? "Panel";
             _vm.StatusMessage = $"📌  {title}   X: {(int)e.Left}   Y: {(int)e.Top}";
         }
 
-        private async void Panel_CloseRequested(object sender, EventArgs e)
-        {
-            if (sender is not UIElement el) return;
-            var panel = el as IDraggablePanel;
-            if (panel is null) return;
-            panel.Visibility       = Visibility.Collapsed;
-            panel.IsHitTestVisible = false;
-            await _vm.PanelManager.HideAsync(panel.PanelKey);
-        }
-
-        // ── Double-click handler ──────────────────────────────────────────
-
-        private void Panel_DoubleClicked(object sender, EventArgs e)
+        private void Panel_DoubleClicked(object? sender, EventArgs e)
         {
             var panel = sender as IDraggablePanel;
             if (panel is null) return;
@@ -78,9 +89,11 @@ namespace MiniIDEv04.Views
 
             Window? win = target switch
             {
-                "ThingsToDoWindow" => new ThingsToDoWindow { Owner = this },
-                "SysManagerWindow" => new SysManagerWindow { Owner = this },
-                _                  => null
+                "ThingsToDoWindow"  => new ThingsToDoWindow  { Owner = this },
+                "SysManagerWindow"  => new SysManagerWindow  { Owner = this },
+                "GitHubPushWindow"  => new GitHubPushWindow  { Owner = this },
+                "DropZoneWindow"    => new DropZoneWindow    { Owner = this },
+                _                   => null
             };
 
             if (win is null) return;
@@ -95,21 +108,11 @@ namespace MiniIDEv04.Views
         private async Task RefreshPanelsFromDbAsync()
         {
             await _vm.PanelManager.LoadAsync();
-            RestorePanelPositions();
+            SpawnPanelsFromDb();
             _vm.StatusMessage = "Panel layout refreshed from DB.";
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)
             => Application.Current.Shutdown();
-
-        // ── Helpers ───────────────────────────────────────────────────────
-
-        private IDraggablePanel? FindPanel(string key) => key switch
-        {
-            "QuickAddPanel"      => QuickAddPanel,
-            "SysManagerLauncher" => SysManagerLauncher,
-            "SysManagerPanel"    => SysManagerPanel,
-            _                    => null
-        };
     }
 }

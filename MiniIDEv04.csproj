@@ -65,6 +65,30 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Controls\SysManagerLauncherControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\SysManagerPanelControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\GitHubLauncherControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\DropZoneLauncherControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\DropZoneWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\GitHubPushWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
 
   <!-- ── C# source files ─────────────────────────────────────────────── -->
@@ -85,6 +109,22 @@
       <DependentUpon>QuickAddPanelControl.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Controls\SysManagerLauncherControl.xaml.cs">
+      <DependentUpon>SysManagerLauncherControl.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Controls\SysManagerPanelControl.xaml.cs">
+      <DependentUpon>SysManagerPanelControl.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Controls\DropZoneLauncherControl.xaml.cs">
+      <DependentUpon>DropZoneLauncherControl.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Controls\GitHubLauncherControl.xaml.cs">
+      <DependentUpon>GitHubLauncherControl.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
 
     <!-- Data -->
     <Compile Include="Data\ProjectDatabase.cs" />
@@ -93,10 +133,14 @@
     <Compile Include="Data\Interfaces\ISysPanelRepository.cs" />
     <Compile Include="Data\Interfaces\IAppSettingsRepository.cs" />
     <Compile Include="Data\Interfaces\ISysControlRepository.cs" />
+    <Compile Include="Data\Interfaces\ISysGitLogRepository.cs" />
+    <Compile Include="Data\Interfaces\ISysDropLogRepository.cs" />
     <Compile Include="Data\Sqlite\SqliteThingsToDoRepository.cs" />
     <Compile Include="Data\Sqlite\SqliteSysPanelRepository.cs" />
     <Compile Include="Data\Sqlite\SqliteAppSettingsRepository.cs" />
     <Compile Include="Data\Sqlite\SqliteSysControlRepository.cs" />
+    <Compile Include="Data\Sqlite\SqliteGitLogRepository.cs" />
+    <Compile Include="Data\Sqlite\SqliteDropLogRepository.cs" />
 
     <!-- Models -->
     <Compile Include="Models\ThingsToDo.cs" />
@@ -105,10 +149,14 @@
     <Compile Include="Models\SysControl.cs" />
     <Compile Include="Models\SysControlProperty.cs" />
     <Compile Include="Models\KnownControlType.cs" />
+    <Compile Include="Models\SysGitLog.cs" />
+    <Compile Include="Models\SysDropLog.cs" />
 
     <!-- Services -->
     <Compile Include="Services\PanelManagerService.cs" />
     <Compile Include="Services\ControlTypeRegistry.cs" />
+    <Compile Include="Services\PanelControlFactory.cs" />
+    <Compile Include="Services\ZipDropService.cs" />
 
     <!-- Converters -->
     <Compile Include="Converters\IntOffsetConverter.cs" />
@@ -117,6 +165,14 @@
     <Compile Include="ViewModels\ProjectViewModel.cs" />
 
     <!-- Views -->
+    <Compile Include="Views\DropZoneWindow.xaml.cs">
+      <DependentUpon>DropZoneWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Views\GitHubPushWindow.xaml.cs">
+      <DependentUpon>GitHubPushWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Views\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -139,6 +195,8 @@
   <!-- ── Seed SQL (visible in Solution Explorer, not compiled) ────────── -->
   <ItemGroup>
     <None Include="Data\seed_handoff_entry.sql" />
+    <None Include="Data\migrate_add_controlclass.sql" />
+    <None Include="ZipDrop\.gitkeep" />
   </ItemGroup>
 
 </Project>

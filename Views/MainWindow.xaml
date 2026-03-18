@@ -3,7 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
         xmlns:vm="clr-namespace:MiniIDEv04.ViewModels"
-        xmlns:ctl="clr-namespace:MiniIDEv04.Controls"
         Title="{Binding AppVersion, StringFormat='MiniIDE — {0}'}"
         Height="900" Width="1400"
         WindowStartupLocation="CenterScreen"
@@ -124,86 +123,14 @@
             </telerik:RadDocking>
 
             <!-- ── Floating panel canvas overlay ─────────────────────── -->
-            <!-- Canvas has no background so RadDocking behind it stays   -->
-            <!-- interactive. Each panel is hit-testable independently.   -->
+            <!-- Canvas is intentionally empty at design time.           -->
+            <!-- PanelControlFactory spawns all panels at runtime        -->
+            <!-- from sys_Panels rows via SpawnPanelsFromDb().           -->
             <Canvas x:Name="FloatingCanvas"
                     Panel.ZIndex="100"
                     IsHitTestVisible="True"
                     HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch">
-
-                <!-- 📝 Quick Add Note — dedicated UserControl, full DataContext -->
-                <ctl:QuickAddPanelControl x:Name="QuickAddPanel"
-                    PanelKey="QuickAddPanel"
-                    Width="620"
-                    MinHeight="56"
-                    IsHitTestVisible="True"
-                    Canvas.Left="20" Canvas.Top="0"
-                    PositionChanged="Panel_PositionChanged"
-                    DraggingPosition="Panel_DraggingPosition"/>
-
-                <!-- ⚙ Sys Manager — bottom-left, original position, text button -->
-                <!-- Double-click opens SysManagerWindow modal                   -->
-                <ctl:DraggablePanel x:Name="SysManagerPanel"
-                    PanelKey="SysManagerPanel"
-                    PanelTitle="⚙ Sys"
-                    Width="120"
-                    MinHeight="80"
-                    ShowCloseButton="False"
-                    ShowResizeGrip="False"
-                    IsHitTestVisible="True"
-                    Canvas.Left="20" Canvas.Top="700"
-                    PositionChanged="Panel_PositionChanged"
-                    DraggingPosition="Panel_DraggingPosition"
-                    PanelDoubleClicked="Panel_DoubleClicked">
-                    <ctl:DraggablePanel.TitleBarBrush>
-                        <SolidColorBrush Color="#FF1A237E"/>
-                    </ctl:DraggablePanel.TitleBarBrush>
-                    <ctl:DraggablePanel.PanelBody>
-                        <Border Background="#FF1A237E">
-                            <TextBlock Text="⚙ Manage&#x0a;sys_ Tables"
-                                       FontSize="10"
-                                       FontWeight="SemiBold"
-                                       Foreground="White"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"
-                                       TextAlignment="Center"/>
-                        </Border>
-                    </ctl:DraggablePanel.PanelBody>
-                </ctl:DraggablePanel>
-
-                <!-- 📝 Notes launcher — freely floating, wrench icon drawn  -->
-                <!-- as WPF Path geometry (no external image file needed)     -->
-                <!-- Double-click opens ThingsToDoWindow modal                -->
-                <ctl:DraggablePanel x:Name="SysManagerLauncher"
-                    PanelKey="SysManagerLauncher"
-                    PanelTitle="📝 Notes"
-                    Width="80"
-                    MinHeight="80"
-                    ShowCloseButton="False"
-                    ShowResizeGrip="False"
-                    IsHitTestVisible="True"
-                    Canvas.Left="20" Canvas.Top="0"
-                    PositionChanged="Panel_PositionChanged"
-                    DraggingPosition="Panel_DraggingPosition"
-                    PanelDoubleClicked="Panel_DoubleClicked">
-                    <ctl:DraggablePanel.TitleBarBrush>
-                        <SolidColorBrush Color="#FF37474F"/>
-                    </ctl:DraggablePanel.TitleBarBrush>
-                    <ctl:DraggablePanel.PanelBody>
-                        <Border Background="#FF263238">
-                            <Viewbox Width="38" Height="38"
-                                     HorizontalAlignment="Center"
-                                     VerticalAlignment="Center"
-                                     Stretch="Uniform">
-                                <Path Fill="White"
-                                      Data="M 28 4 C 22 4 17 8 16 14 L 2 28 C 0 30 0 33 2 35 L 5 38 C 7 40 10 40 12 38 L 26 24 C 32 23 36 18 36 12 C 36 10 35 8 34 6 L 28 12 L 24 8 Z M 6 33 C 6 34 5 35 4 35 C 3 35 2 34 2 33 C 2 32 3 31 4 31 C 5 31 6 32 6 33 Z"/>
-                            </Viewbox>
-                        </Border>
-                    </ctl:DraggablePanel.PanelBody>
-                </ctl:DraggablePanel>
-
-            </Canvas>
+                    VerticalAlignment="Stretch"/>
         </Grid>
 
         <!-- ═══ Status bar ════════════════════════════════════════════════ -->

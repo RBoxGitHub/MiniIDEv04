@@ -1,0 +1,14 @@
+[
+  { "file": "SysDropLog.cs",                  "destination": "Models\\" },
+  { "file": "ISysDropLogRepository.cs",       "destination": "Data\\Interfaces\\" },
+  { "file": "SqliteDropLogRepository.cs",     "destination": "Data\\Sqlite\\" },
+  { "file": "ZipDropService.cs",              "destination": "Services\\" },
+  { "file": "DropZoneLauncherControl.xaml",   "destination": "Controls\\" },
+  { "file": "DropZoneLauncherControl.xaml.cs","destination": "Controls\\" },
+  { "file": "DropZoneWindow.xaml",            "destination": "Views\\" },
+  { "file": "DropZoneWindow.xaml.cs",         "destination": "Views\\" },
+  { "file": "ProjectDatabase.cs",             "destination": "Data\\" },
+  { "file": "PanelControlFactory.cs",         "destination": "Services\\" },
+  { "file": "MainWindow.xaml.cs",             "destination": "Views\\" },
+  { "file": "MiniIDEv04.csproj",              "destination": "." }
+]

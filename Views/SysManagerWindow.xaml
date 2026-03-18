@@ -336,6 +336,71 @@
                 </Grid>
             </telerik:RadTabItem>
 
+            <!-- ══════════════════════════════════════════════════════════════
+                 TAB 3 — Git Log
+            ══════════════════════════════════════════════════════════════════ -->
+            <telerik:RadTabItem Header="🐙 Git Log">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Border Grid.Row="0" Background="#FF1B5E20" Padding="12,8">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Left"
+                                       Text="🐙  sys_GitLog — push history"
+                                       Foreground="White" FontSize="12"
+                                       FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="GitLogCountText"
+                                       DockPanel.Dock="Right"
+                                       Foreground="#FF90CAF9" FontSize="11"
+                                       VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                        </DockPanel>
+                    </Border>
+
+                    <!-- Grid -->
+                    <telerik:RadGridView Grid.Row="1"
+                        x:Name="GitLogGrid"
+                        Margin="8,8,8,0"
+                        AutoGenerateColumns="False"
+                        telerik:StyleManager.Theme="Windows11"
+                        AlternateRowBackground="#FFE8F4FD"
+                        AlternationCount="2"
+                        IsReadOnly="True"
+                        RowIndicatorVisibility="Collapsed"
+                        SelectionMode="Single">
+                        <telerik:RadGridView.Columns>
+                            <telerik:GridViewDataColumn
+                                DataMemberBinding="{Binding PushedAt, StringFormat='{}{0:MM/dd/yy HH:mm:ss}'}"
+                                Header="Pushed At" Width="130"/>
+                            <telerik:GridViewCheckBoxColumn
+                                DataMemberBinding="{Binding Success}"
+                                Header="OK" Width="44"/>
+                            <telerik:GridViewDataColumn
+                                DataMemberBinding="{Binding CommitMessage}"
+                                Header="Commit Message" Width="*"/>
+                            <telerik:GridViewDataColumn
+                                DataMemberBinding="{Binding VersionTag}"
+                                Header="Tag" Width="80"/>
+                        </telerik:RadGridView.Columns>
+                    </telerik:RadGridView>
+
+                    <!-- Actions -->
+                    <WrapPanel Grid.Row="2" Margin="8,8,8,4" Orientation="Horizontal">
+                        <telerik:RadButton Content="🔄 Refresh"
+                            Margin="0,0,8,0"
+                            Click="RefreshGitLog_Click"/>
+                        <telerik:RadButton Content="🗑 Clear Log"
+                            Margin="0,0,8,0"
+                            Click="ClearGitLog_Click"
+                            ToolTip="Delete all git log entries from DB"/>
+                    </WrapPanel>
+                </Grid>
+            </telerik:RadTabItem>
+
         </telerik:RadTabControl>
 
         <!-- ── Footer ───────────────────────────────────────────────────── -->

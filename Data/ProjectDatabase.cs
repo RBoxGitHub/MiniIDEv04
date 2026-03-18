@@ -31,10 +31,89 @@ namespace MiniIDEv04.Data
             db.CreateTable<SysAppSetting>();
             db.CreateTable<SysControl>();
             db.CreateTable<SysControlProperty>();
+            db.CreateTable<SysGitLog>();
+            db.CreateTable<SysDropLog>();
+
+            // ── Migrations — safe to run on existing DB ──────────────────
+            MigrateAddColumnIfMissing(db, "sys_Panels", "ControlClass",  "TEXT DEFAULT ''");
+            MigrateAddColumnIfMissing(db, "sys_Panels", "HasSaveButton", "INTEGER DEFAULT 0");
+            MigrateAddColumnIfMissing(db, "sys_Panels", "LaunchTarget",  "TEXT DEFAULT ''");
 
             SeedAppSettings(db);
             SeedPanels(db);
             SeedThingsToDo(db);
+
+            // ── Back-fill ControlClass for existing rows ─────────────────
+            BackFillControlClass(db);
+        }
+
+        private static void MigrateAddColumnIfMissing(SQLiteConnection db,
+            string table, string column, string definition)
+        {
+            try
+            {
+                db.Execute($"ALTER TABLE {table} ADD COLUMN {column} {definition}");
+            }
+            catch
+            {
+                // Column already exists — swallow the error, continue
+            }
+        }
+
+        private static void BackFillControlClass(SQLiteConnection db)
+        {
+            var map = new Dictionary<string, string>
+            {
+                ["QuickAddPanel"]      = "QuickAddPanelControl",
+                ["SysManagerLauncher"] = "SysManagerLauncherControl",
+                ["SysManagerPanel"]    = "SysManagerPanelControl",
+                ["GitHubLauncher"]     = "GitHubLauncherControl",
+                ["DropZoneLauncher"]   = "DropZoneLauncherControl",
+            };
+
+            foreach (var (key, cls) in map)
+                db.Execute(
+                    "UPDATE sys_Panels SET ControlClass=? WHERE PanelKey=? AND (ControlClass IS NULL OR ControlClass='')",
+                    cls, key);
+
+            // Insert DropZoneLauncher if missing
+            var existingDz = db.ExecuteScalar<int>(
+                "SELECT COUNT(*) FROM sys_Panels WHERE PanelKey='DropZoneLauncher'");
+            if (existingDz == 0)
+                db.Execute(@"
+                    INSERT INTO sys_Panels
+                        (PanelKey, PanelName, Description, IsVisible, IsPinned, IsCloned,
+                         PosLeft, PosTop, PanelWidth, PanelHeight, TitleBarColor,
+                         LaunchTarget, ControlClass, HasSaveButton, Version, SortOrder,
+                         CreatedAt, UpdatedAt)
+                    VALUES
+                        ('DropZoneLauncher','📦 Drop Zone','Launcher — double-click to open Drop Zone',
+                         1,0,0, 210,0,80,80,'#FF4A148C',
+                         'DropZoneWindow','DropZoneLauncherControl',0,'4.0.0',5,
+                         datetime('now'),datetime('now'))");
+
+            // Insert GitHubLauncher if missing (replaces old GitHubPushPanel)
+            var existing = db.ExecuteScalar<int>(
+                "SELECT COUNT(*) FROM sys_Panels WHERE PanelKey='GitHubLauncher'");
+            if (existing == 0)
+                db.Execute(@"
+                    INSERT INTO sys_Panels
+                        (PanelKey, PanelName, Description, IsVisible, IsPinned, IsCloned,
+                         PosLeft, PosTop, PanelWidth, PanelHeight, TitleBarColor,
+                         LaunchTarget, ControlClass, HasSaveButton, Version, SortOrder,
+                         CreatedAt, UpdatedAt)
+                    VALUES
+                        ('GitHubLauncher','🐙 GitHub','Launcher — double-click to open GitHub Push modal',
+                         1,0,0, 120,0,80,80,'#FF1B5E20',
+                         'GitHubPushWindow','GitHubLauncherControl',0,'4.0.0',4,
+                         datetime('now'),datetime('now'))");
+
+            // Remove old GitHubPushPanel if present
+            db.Execute("DELETE FROM sys_Panels WHERE PanelKey='GitHubPushPanel'");
+
+            // Fix GitHubPushPanel position if it was inserted at the old overlapping position
+            db.Execute(
+                "UPDATE sys_Panels SET PosLeft=660, PosTop=0 WHERE PanelKey='GitHubPushPanel' AND PosLeft=20 AND PosTop=100");
         }
 
         // ── Seeds ──────────────────────────────────────────────────────────
@@ -68,6 +147,18 @@ namespace MiniIDEv04.Data
                     Key         = "SqlServerConnection",
                     Value       = "",
                     Description = "SQL Server connection string — Phase 4 exported .sln projects only"
+                },
+                new SysAppSetting
+                {
+                    Key         = "ProjectRootPath",
+                    Value       = @"D:\GrokCryptoTrack\Production-Claude\MiniIDE-WorkFolder\MiniIDEv04",
+                    Description = "Root folder of the MiniIDEv04 project source"
+                },
+                new SysAppSetting
+                {
+                    Key         = "ZipWorkFolder",
+                    Value       = "ZipDrop",
+                    Description = "Relative path to zip drop folder — resolved from AppContext.BaseDirectory"
                 }
             });
         }
@@ -85,12 +176,11 @@ namespace MiniIDEv04.Data
                     Description   = "Floating quick-add bar — type a note and hit + Add",
                     IsVisible     = true,
                     IsPinned      = false,
-                    PosLeft       = 20,
-                    PosTop        = 0,
-                    PanelWidth    = 620,
-                    PanelHeight   = 56,
+                    PosLeft       = 20, PosTop = 0,
+                    PanelWidth    = 620, PanelHeight = 56,
                     TitleBarColor = "#FF37474F",
                     LaunchTarget  = "",
+                    ControlClass  = "QuickAddPanelControl",
                     HasSaveButton = false,
                     SortOrder     = 2
                 },
@@ -101,12 +191,11 @@ namespace MiniIDEv04.Data
                     Description   = "Floating wrench launcher — double-click to open ThingsToDo modal",
                     IsVisible     = true,
                     IsPinned      = false,
-                    PosLeft       = 20,
-                    PosTop        = 0,
-                    PanelWidth    = 80,
-                    PanelHeight   = 80,
+                    PosLeft       = 20, PosTop = 0,
+                    PanelWidth    = 80, PanelHeight = 80,
                     TitleBarColor = "#FF37474F",
                     LaunchTarget  = "ThingsToDoWindow",
+                    ControlClass  = "SysManagerLauncherControl",
                     HasSaveButton = true,
                     SortOrder     = 0
                 },
@@ -117,14 +206,43 @@ namespace MiniIDEv04.Data
                     Description   = "Pinned sys_ launcher — double-click to open SysManager modal",
                     IsVisible     = true,
                     IsPinned      = true,
-                    PosLeft       = 20,
-                    PosTop        = 700,
-                    PanelWidth    = 120,
-                    PanelHeight   = 80,
+                    PosLeft       = 20, PosTop = 700,
+                    PanelWidth    = 120, PanelHeight = 80,
                     TitleBarColor = "#FF1A237E",
                     LaunchTarget  = "SysManagerWindow",
+                    ControlClass  = "SysManagerPanelControl",
                     HasSaveButton = true,
                     SortOrder     = 1
+                },
+                new SysPanel
+                {
+                    PanelKey      = "DropZoneLauncher",
+                    PanelName     = "📦 Drop Zone",
+                    Description   = "Launcher — double-click to open Drop Zone file deployer",
+                    IsVisible     = true,
+                    IsPinned      = false,
+                    PosLeft       = 210, PosTop = 0,
+                    PanelWidth    = 80, PanelHeight = 80,
+                    TitleBarColor = "#FF4A148C",
+                    LaunchTarget  = "DropZoneWindow",
+                    ControlClass  = "DropZoneLauncherControl",
+                    HasSaveButton = false,
+                    SortOrder     = 5
+                },
+                new SysPanel
+                {
+                    PanelKey      = "GitHubLauncher",
+                    PanelName     = "🐙 GitHub",
+                    Description   = "Launcher — double-click to open GitHub Push modal",
+                    IsVisible     = true,
+                    IsPinned      = false,
+                    PosLeft       = 120, PosTop = 0,
+                    PanelWidth    = 80, PanelHeight = 80,
+                    TitleBarColor = "#FF1B5E20",
+                    LaunchTarget  = "GitHubPushWindow",
+                    ControlClass  = "GitHubLauncherControl",
+                    HasSaveButton = false,
+                    SortOrder     = 4
                 }
             });
         }

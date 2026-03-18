@@ -11,6 +11,7 @@ namespace MiniIDEv04.Views
     {
         private readonly SqliteSysPanelRepository   _panelRepo   = new();
         private readonly SqliteSysControlRepository _controlRepo = new();
+        private readonly SqliteGitLogRepository     _gitLogRepo  = new();
 
         private SysPanel?  _selectedPanel;
         private SysControl? _selectedControl;
@@ -22,6 +23,7 @@ namespace MiniIDEv04.Views
             {
                 await LoadPanelsAsync();
                 await LoadControlsAsync();
+                await LoadGitLogAsync();
                 await ApplySaveButtonVisibilityAsync();
                 LoadControlTypePicker();
             };
@@ -228,5 +230,35 @@ namespace MiniIDEv04.Views
         // ── Footer ────────────────────────────────────────────────────────
 
         private void Close_Click(object sender, RoutedEventArgs e) => Close();
+
+        // ── Tab 3: Git Log ────────────────────────────────────────────────
+
+        private async Task LoadGitLogAsync()
+        {
+            var logs = await _gitLogRepo.GetRecentAsync(100);
+            GitLogGrid.ItemsSource = new ObservableCollection<SysGitLog>(logs);
+            GitLogCountText.Text   = $"{logs.Count} push records";
+        }
+
+        private async void RefreshGitLog_Click(object sender, RoutedEventArgs e)
+        {
+            await LoadGitLogAsync();
+            StatusText.Text = "Git log refreshed.";
+        }
+
+        private async void ClearGitLog_Click(object sender, RoutedEventArgs e)
+        {
+            var result = MessageBox.Show(
+                "Delete all git log entries?", "Confirm",
+                MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (result != MessageBoxResult.Yes) return;
+
+            var logs = await _gitLogRepo.GetAllAsync();
+            foreach (var log in logs)
+                await _gitLogRepo.DeleteAsync(log.Id);
+
+            await LoadGitLogAsync();
+            StatusText.Text = "Git log cleared.";
+        }
     }
 }

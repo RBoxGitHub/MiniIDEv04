@@ -2,6 +2,7 @@ using MiniIDEv04.Data.Sqlite;
 using MiniIDEv04.Services;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
@@ -24,19 +25,30 @@ namespace MiniIDEv04.Views
 
         private async Task InitAsync()
         {
-            // Load settings
-            var root = await _settings.GetValueAsync("ProjectRootPath");
-            ProjectRootBox.Text = string.IsNullOrWhiteSpace(root)
-                ? @"D:\GrokCryptoTrack\Production-Claude\MiniIDE-WorkFolder\MiniIDEv04"
-                : root;
+            try
+            {
+                var root = await _settings.GetValueAsync("ProjectRootPath");
+                ProjectRootBox.Text = string.IsNullOrWhiteSpace(root)
+                    ? @"D:\GrokCryptoTrack\Production-Claude\MiniIDE-WorkFolder\MiniIDEv04"
+                    : root;
 
-            var folder = await _settings.GetValueAsync("ZipWorkFolder");
-            _zipWorkFolder = string.IsNullOrWhiteSpace(folder)
-                ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads")
-                : folder;
+                var folder = await _settings.GetValueAsync("ZipWorkFolder");
+                _zipWorkFolder = string.IsNullOrWhiteSpace(folder)
+                    ? Path.Combine(AppContext.BaseDirectory, "ZipDrop")
+                    : folder;
+
+                // Create ZipDrop folder if it doesn't exist
+                Directory.CreateDirectory(_zipWorkFolder);
+            }
+            catch
+            {
+                ProjectRootBox.Text = @"D:\GrokCryptoTrack\Production-Claude\MiniIDE-WorkFolder\MiniIDEv04";
+                _zipWorkFolder = Path.Combine(AppContext.BaseDirectory, "ZipDrop");
+                Directory.CreateDirectory(_zipWorkFolder);
+            }
 
             RefreshZipFolder();
-            await LoadRecentLogAsync();
+            try { await LoadRecentLogAsync(); } catch { }
         }
 
         // ── Left panel: zip folder browser ───────────────────────────────
@@ -70,19 +82,14 @@ namespace MiniIDEv04.Views
 
         private async void BrowseZipFolder_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new OpenFolderDialog
-            {
-                Title = "Select Zip Work Folder"
-            };
-            if (dlg.ShowDialog() == true)
-            {
-                _zipWorkFolder = dlg.FolderName;
-                await _settings.SetValueAsync("ZipWorkFolder", _zipWorkFolder);
-                RefreshZipFolder();
-            }
+            var folder = BrowseForFolder("Select Zip Work Folder", _zipWorkFolder);
+            if (folder is null) return;
+            _zipWorkFolder = folder;
+            await _settings.SetValueAsync("ZipWorkFolder", _zipWorkFolder);
+            RefreshZipFolder();
         }
 
-        // ── Right panel: zip file + project root ──────────────────────────
+        // ── Right panel ───────────────────────────────────────────────────
 
         private void BrowseZip_Click(object sender, RoutedEventArgs e)
         {
@@ -100,12 +107,10 @@ namespace MiniIDEv04.Views
 
         private async void BrowseRoot_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new OpenFolderDialog { Title = "Select Project Root Folder" };
-            if (dlg.ShowDialog() == true)
-            {
-                ProjectRootBox.Text = dlg.FolderName;
-                await _settings.SetValueAsync("ProjectRootPath", dlg.FolderName);
-            }
+            var folder = BrowseForFolder("Select Project Root Folder", ProjectRootBox.Text);
+            if (folder is null) return;
+            ProjectRootBox.Text = folder;
+            await _settings.SetValueAsync("ProjectRootPath", folder);
         }
 
         // ── Process zip ───────────────────────────────────────────────────
@@ -143,7 +148,6 @@ namespace MiniIDEv04.Views
                 StatusText.Text =
                     $"✅  Done — {results.Count} files deployed  ·  {DateTime.Now:HH:mm:ss}";
 
-                // Refresh zip list in case new zips appeared
                 RefreshZipFolder();
             }
             catch (Exception ex)
@@ -167,12 +171,9 @@ namespace MiniIDEv04.Views
             StatusText.Text         = "Showing recent history — select a zip to deploy";
         }
 
-        // ── Clear log ─────────────────────────────────────────────────────
-
         private async void ClearLog_Click(object sender, RoutedEventArgs e)
         {
-            var result = MessageBox.Show(
-                "Clear all drop log entries?", "Confirm",
+            var result = MessageBox.Show("Clear all drop log entries?", "Confirm",
                 MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (result != MessageBoxResult.Yes) return;
 
@@ -186,5 +187,99 @@ namespace MiniIDEv04.Views
         }
 
         private void Close_Click(object sender, RoutedEventArgs e) => Close();
+
+        // ── COM folder picker (no WinForms dependency) ────────────────────
+
+        private static string? BrowseForFolder(string description, string? initialPath = null)
+        {
+            var dialog = (IFileOpenDialog)new FileOpenDialog();
+            try
+            {
+                dialog.SetOptions(FOS.FOS_PICKFOLDERS | FOS.FOS_FORCEFILESYSTEM);
+                dialog.SetTitle(description);
+
+                if (!string.IsNullOrWhiteSpace(initialPath) && Directory.Exists(initialPath))
+                {
+                    var iid = typeof(IShellItem).GUID;
+                    SHCreateItemFromParsingName(initialPath, IntPtr.Zero, ref iid, out var item);
+                    if (item != null) dialog.SetFolder(item);
+                }
+
+                var hr = dialog.Show(IntPtr.Zero);
+                if (hr != 0) return null;
+
+                dialog.GetResult(out var result);
+                result.GetDisplayName(SIGDN.SIGDN_FILESYSPATH, out var path);
+                return path;
+            }
+            finally
+            {
+                Marshal.ReleaseComObject(dialog);
+            }
+        }
+
+        [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+        private static extern int SHCreateItemFromParsingName(
+            string pszPath, IntPtr pbc, ref Guid riid, out IShellItem ppv);
+
+        [ComImport, Guid("DC1C5A9C-E88A-4dde-A5A1-60F82A20AEF7")]
+        private class FileOpenDialog { }
+
+        [ComImport, Guid("42F85136-DB7E-439C-85F1-E4075D135FC8"),
+         InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        private interface IFileOpenDialog
+        {
+            [PreserveSig] int Show(IntPtr hwnd);
+            void SetFileTypes(uint cFileTypes, IntPtr rgFilterSpec);
+            void SetFileTypeIndex(uint iFileType);
+            void GetFileTypeIndex(out uint piFileType);
+            void Advise(IntPtr pfde, out uint pdwCookie);
+            void Unadvise(uint dwCookie);
+            void SetOptions(FOS fos);
+            void GetOptions(out FOS pfos);
+            void SetDefaultFolder(IShellItem psi);
+            void SetFolder(IShellItem psi);
+            void GetFolder(out IShellItem ppsi);
+            void GetCurrentSelection(out IShellItem ppsi);
+            void SetFileName([MarshalAs(UnmanagedType.LPWStr)] string pszName);
+            void GetFileName([MarshalAs(UnmanagedType.LPWStr)] out string pszName);
+            void SetTitle([MarshalAs(UnmanagedType.LPWStr)] string pszTitle);
+            void SetOkButtonLabel([MarshalAs(UnmanagedType.LPWStr)] string pszText);
+            void SetFileNameLabel([MarshalAs(UnmanagedType.LPWStr)] string pszLabel);
+            void GetResult(out IShellItem ppsi);
+            void AddPlace(IShellItem psi, int alignment);
+            void SetDefaultExtension([MarshalAs(UnmanagedType.LPWStr)] string pszDefaultExtension);
+            void Close(int hr);
+            void SetClientGuid([In] ref Guid guid);
+            void ClearClientData();
+            void SetFilter(IntPtr pFilter);
+            void GetResults(out IntPtr ppenum);
+            void GetSelectedItems(out IntPtr ppsai);
+        }
+
+        [ComImport, Guid("43826D1E-E718-42EE-BC55-A1E261C37BFE"),
+         InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        private interface IShellItem
+        {
+            void BindToHandler(IntPtr pbc, [In] ref Guid bhid,
+                [In] ref Guid riid, out IntPtr ppv);
+            void GetParent(out IShellItem ppsi);
+            void GetDisplayName(SIGDN sigdnName,
+                [MarshalAs(UnmanagedType.LPWStr)] out string ppszName);
+            void GetAttributes(uint sfgaoMask, out uint psfgaoAttribs);
+            void Compare(IShellItem psi, uint hint, out int piOrder);
+        }
+
+        [Flags]
+        private enum FOS : uint
+        {
+            FOS_PICKFOLDERS    = 0x00000020,
+            FOS_FORCEFILESYSTEM = 0x00000040
+        }
+
+        private enum SIGDN : uint
+        {
+            SIGDN_FILESYSPATH = 0x80058000
+        }
     }
 }

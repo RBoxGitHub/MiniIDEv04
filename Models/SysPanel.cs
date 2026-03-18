@@ -45,6 +45,14 @@ namespace MiniIDEv04.Models
         [MaxLength(100)]
         public string? LaunchTarget { get; set; }
 
+        /// <summary>
+        /// Maps this panel row to a UserControl type name.
+        /// PanelControlFactory uses this to instantiate the correct control at runtime.
+        /// e.g. "QuickAddPanelControl", "GitHubPushPanelControl"
+        /// </summary>
+        [MaxLength(100)]
+        public string ControlClass { get; set; } = string.Empty;
+
         [MaxLength(20)]
         public string Version { get; set; } = "1.0";
 
