@@ -3,8 +3,10 @@ using MiniIDEv04.Services;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using Microsoft.Win32;
 
 namespace MiniIDEv04.Views
@@ -14,7 +16,6 @@ namespace MiniIDEv04.Views
         private readonly ZipDropService              _dropService = new();
         private readonly SqliteDropLogRepository     _dropLog     = new();
         private readonly SqliteAppSettingsRepository _settings    = new();
-
         private string _zipWorkFolder = string.Empty;
 
         public DropZoneWindow()
@@ -37,13 +38,12 @@ namespace MiniIDEv04.Views
                     ? Path.Combine(AppContext.BaseDirectory, "ZipDrop")
                     : folder;
 
-                // Create ZipDrop folder if it doesn't exist
                 Directory.CreateDirectory(_zipWorkFolder);
             }
             catch
             {
                 ProjectRootBox.Text = @"D:\GrokCryptoTrack\Production-Claude\MiniIDE-WorkFolder\MiniIDEv04";
-                _zipWorkFolder = Path.Combine(AppContext.BaseDirectory, "ZipDrop");
+                _zipWorkFolder      = Path.Combine(AppContext.BaseDirectory, "ZipDrop");
                 Directory.CreateDirectory(_zipWorkFolder);
             }
 
@@ -51,22 +51,18 @@ namespace MiniIDEv04.Views
             try { await LoadRecentLogAsync(); } catch { }
         }
 
-        // ── Left panel: zip folder browser ───────────────────────────────
+        // ── Left panel ────────────────────────────────────────────────
 
         private void RefreshZipFolder()
         {
             ZipFolderBox.Text = _zipWorkFolder;
-
             if (!Directory.Exists(_zipWorkFolder))
-            {
-                ZipFileList.ItemsSource = null;
-                return;
-            }
+            { ZipFileList.ItemsSource = null; return; }
 
             var zips = Directory.GetFiles(_zipWorkFolder, "*.zip")
-                                .OrderByDescending(File.GetLastWriteTime)
-                                .Select(Path.GetFileName)
-                                .ToList();
+                .OrderByDescending(File.GetLastWriteTime)
+                .Select(Path.GetFileName)
+                .ToList();
 
             ZipFileList.ItemsSource = new ObservableCollection<string>(zips!);
         }
@@ -89,7 +85,7 @@ namespace MiniIDEv04.Views
             RefreshZipFolder();
         }
 
-        // ── Right panel ───────────────────────────────────────────────────
+        // ── Right panel ───────────────────────────────────────────────
 
         private void BrowseZip_Click(object sender, RoutedEventArgs e)
         {
@@ -113,7 +109,7 @@ namespace MiniIDEv04.Views
             await _settings.SetValueAsync("ProjectRootPath", folder);
         }
 
-        // ── Process zip ───────────────────────────────────────────────────
+        // ── Process zip ───────────────────────────────────────────────
 
         private async void ProcessZip_Click(object sender, RoutedEventArgs e)
         {
@@ -121,23 +117,43 @@ namespace MiniIDEv04.Views
             var projectRoot = ProjectRootBox.Text.Trim();
 
             if (string.IsNullOrWhiteSpace(zipPath) || !File.Exists(zipPath))
-            { StatusText.Text = "⚠  Select a zip file first."; return; }
+            { StatusText.Text = "⚠ Select a zip file first."; return; }
 
             if (string.IsNullOrWhiteSpace(projectRoot) || !Directory.Exists(projectRoot))
-            { StatusText.Text = "⚠  Project root folder not found."; return; }
+            { StatusText.Text = "⚠ Project root folder not found."; return; }
 
-            StatusText.Text = "Processing...";
+            SetProcessingState(true);
+
+            // Capture all progress messages for optional log file
+            var logLines = new List<string>();
+            var zipName  = Path.GetFileName(zipPath);
+
+            List<ZipDropService.DropResult> results;
+            string commitMessage;
 
             try
             {
-                var results = await Task.Run(() =>
-                    _dropService.ProcessZip(zipPath, projectRoot));
+                var progress = new Progress<ZipDropService.ZipDropProgress>(p =>
+                {
+                    StatusText.Text         = p.Message;
+                    DeployProgressBar.Value = p.ProgressPercent;
+                    ProgressPctText.Text    = $"{p.ProgressPercent}%";
+                    logLines.Add($"  {p.Message,-55} {p.ProgressPercent,3}%");
+                });
+
+                results = await Task.Run(() =>
+                    _dropService.ProcessZip(zipPath, projectRoot, progress));
+
+                commitMessage = await Task.Run(() =>
+                    ZipDropService.ExtractCommitMessage(zipPath));
+
+                ReportProgress("🗄 Logging results...", 95);
 
                 ResultsGrid.ItemsSource = new ObservableCollection<ZipDropService.DropResult>(results);
 
                 FileCountText.Text =
-                    $"{results.Count} files  ·  " +
-                    $"{results.Count(r => r.Status == "New")} new  ·  " +
+                    $"{results.Count} files · " +
+                    $"{results.Count(r => r.Status == "New")} new · " +
                     $"{results.Count(r => r.Status == "Updated")} updated";
 
                 foreach (var r in results)
@@ -145,18 +161,149 @@ namespace MiniIDEv04.Views
                         Path.GetFileName(zipPath),
                         r.FileName, r.Destination, r.Status);
 
-                StatusText.Text =
-                    $"✅  Done — {results.Count} files deployed  ·  {DateTime.Now:HH:mm:ss}";
-
-                RefreshZipFolder();
+                ReportProgress($"✅ Done — {results.Count} files deployed", 100);
+                await Task.Delay(600);
             }
             catch (Exception ex)
             {
-                StatusText.Text = $"❌  {ex.Message}";
+                StatusText.Text = $"❌ {ex.Message}";
+                SetProcessingState(false);
+                return;
+            }
+            finally
+            {
+                SetProcessingState(false);
+                RefreshZipFolder();
+            }
+
+            StatusText.Text = $"✅ Done — {results.Count} files deployed · {DateTime.Now:HH:mm:ss}";
+
+            // ── Save log file if checkbox is checked ──────────────────
+            if (SaveLogCheckBox.IsChecked == true)
+                SaveDeployLog(zipName, projectRoot, commitMessage, logLines, results);
+
+            // ── Show summary popup ────────────────────────────────────
+            var summary = new DropZoneSummaryWindow(
+                zipName:       zipName,
+                results:       results,
+                projectRoot:   projectRoot,
+                commitMessage: commitMessage)
+            { Owner = this };
+
+            summary.ShowDialog();
+
+            if (summary.Tag is string buildOutput && !string.IsNullOrWhiteSpace(buildOutput))
+                ShowBuildOutput(buildOutput);
+        }
+
+        // ── Log file writer ───────────────────────────────────────────
+
+        private void SaveDeployLog(
+            string zipName,
+            string projectRoot,
+            string commitMessage,
+            List<string> progressLines,
+            List<ZipDropService.DropResult> results)
+        {
+            try
+            {
+                var timestamp  = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                var logName    = $"{Path.GetFileNameWithoutExtension(zipName)}_{timestamp}_deploy.log";
+                var logPath    = Path.Combine(_zipWorkFolder, logName);
+                var separator  = new string('─', 60);
+
+                var sb = new StringBuilder();
+                sb.AppendLine("MiniIDEv04 Deploy Log");
+                sb.AppendLine(separator);
+                sb.AppendLine($"Zip:     {zipName}");
+                sb.AppendLine($"Date:    {DateTime.Now:MMM dd yyyy  HH:mm:ss}");
+                sb.AppendLine($"Root:    {projectRoot}");
+                if (!string.IsNullOrWhiteSpace(commitMessage))
+                    sb.AppendLine($"Commit:  {commitMessage}");
+                sb.AppendLine(separator);
+                sb.AppendLine();
+
+                sb.AppendLine("PROCESS NARRATIVE");
+                sb.AppendLine(separator);
+                foreach (var line in progressLines)
+                    sb.AppendLine(line);
+                sb.AppendLine();
+
+                sb.AppendLine("RESULTS");
+                sb.AppendLine(separator);
+
+                int maxFile = results.Max(r => r.FileName.Length);
+                foreach (var r in results)
+                {
+                    var icon = r.Status switch
+                    {
+                        "New"                              => "✅ New    ",
+                        "Updated"                          => "🔄 Updated",
+                        var s when s.StartsWith("Skipped") => "⏭ Skipped",
+                        var s when s.StartsWith("Error")   => "❌ Error  ",
+                        _                                  => r.Status
+                    };
+                    sb.AppendLine($"  {icon}  {r.FileName.PadRight(maxFile + 2)} → {r.Destination}");
+                }
+
+                sb.AppendLine();
+                sb.AppendLine(separator);
+                sb.AppendLine($"Total:   {results.Count} files");
+                sb.AppendLine($"New:     {results.Count(r => r.Status == "New")}");
+                sb.AppendLine($"Updated: {results.Count(r => r.Status == "Updated")}");
+                sb.AppendLine($"Skipped: {results.Count(r => r.Status.StartsWith("Skipped"))}");
+                sb.AppendLine($"Errors:  {results.Count(r => r.Status.StartsWith("Error"))}");
+                sb.AppendLine(separator);
+
+                File.WriteAllText(logPath, sb.ToString(), Encoding.UTF8);
+
+                StatusText.Text = $"✅ Done — {results.Count} files deployed · Log saved → {logName}";
+            }
+            catch (Exception ex)
+            {
+                // Log save failure is non-fatal
+                StatusText.Text += $"  (⚠ Log save failed: {ex.Message})";
             }
         }
 
-        // ── Recent log ────────────────────────────────────────────────────
+        // ── Progress helpers ──────────────────────────────────────────
+
+        private void SetProcessingState(bool isProcessing)
+        {
+            ProgressPanel.Visibility   = isProcessing ? Visibility.Visible : Visibility.Collapsed;
+            ProcessZipButton.IsEnabled = !isProcessing;
+
+            if (!isProcessing)
+            {
+                DeployProgressBar.Value = 0;
+                ProgressPctText.Text    = string.Empty;
+            }
+        }
+
+        private void ReportProgress(string message, int pct)
+        {
+            StatusText.Text         = message;
+            DeployProgressBar.Value = pct;
+            ProgressPctText.Text    = $"{pct}%";
+        }
+
+        // ── Build output ──────────────────────────────────────────────
+
+        public void ShowBuildOutput(string output)
+        {
+            BuildOutputHeader.Visibility = Visibility.Visible;
+            BuildOutputBox.Visibility    = Visibility.Visible;
+            BuildOutputBox.Text          = output;
+            BuildOutputBox.ScrollToEnd();
+
+            bool success = output.Contains("Build succeeded");
+            BuildResultText.Text       = success ? "✅ Build succeeded" : "❌ Build failed";
+            BuildResultText.Foreground = success
+                ? new SolidColorBrush(Color.FromRgb(165, 214, 167))
+                : new SolidColorBrush(Color.FromRgb(239, 154, 154));
+        }
+
+        // ── Recent log ────────────────────────────────────────────────
 
         private async Task LoadRecentLogAsync()
         {
@@ -188,7 +335,7 @@ namespace MiniIDEv04.Views
 
         private void Close_Click(object sender, RoutedEventArgs e) => Close();
 
-        // ── COM folder picker (no WinForms dependency) ────────────────────
+        // ── COM folder picker ─────────────────────────────────────────
 
         private static string? BrowseForFolder(string description, string? initialPath = null)
         {
@@ -212,10 +359,7 @@ namespace MiniIDEv04.Views
                 result.GetDisplayName(SIGDN.SIGDN_FILESYSPATH, out var path);
                 return path;
             }
-            finally
-            {
-                Marshal.ReleaseComObject(dialog);
-            }
+            finally { Marshal.ReleaseComObject(dialog); }
         }
 
         [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
@@ -273,13 +417,10 @@ namespace MiniIDEv04.Views
         [Flags]
         private enum FOS : uint
         {
-            FOS_PICKFOLDERS    = 0x00000020,
+            FOS_PICKFOLDERS     = 0x00000020,
             FOS_FORCEFILESYSTEM = 0x00000040
         }
 
-        private enum SIGDN : uint
-        {
-            SIGDN_FILESYSPATH = 0x80058000
-        }
+        private enum SIGDN : uint { SIGDN_FILESYSPATH = 0x80058000 }
     }
 }

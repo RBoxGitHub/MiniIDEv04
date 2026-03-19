@@ -56,20 +56,23 @@ namespace MiniIDEv04.Data.Sqlite
 
             var clone = new SysPanel
             {
-                PanelKey      = $"{sourcePanelKey}_Clone_{DateTime.UtcNow:yyyyMMddHHmmss}",
-                PanelName     = newName,
-                Description   = $"Cloned from {source.PanelName}",
-                IsVisible     = true,
-                IsPinned      = false,
-                IsCloned      = true,
-                ClonedFromKey = sourcePanelKey,
-                PosLeft       = source.PosLeft  + 30,
-                PosTop        = source.PosTop   + 30,
-                PanelWidth    = source.PanelWidth,
-                PanelHeight   = source.PanelHeight,
-                TitleBarColor = source.TitleBarColor,
-                Version       = source.Version,
-                SortOrder     = source.SortOrder + 1
+                PanelKey        = $"{sourcePanelKey}_Clone_{DateTime.UtcNow:yyyyMMddHHmmss}",
+                PanelName       = newName,
+                Description     = $"Cloned from {source.PanelName}",
+                IsVisible       = true,
+                IsPinned        = false,
+                IsCloned        = true,
+                ClonedFromKey   = sourcePanelKey,
+                PosLeft         = source.PosLeft  + 30,
+                PosTop          = source.PosTop   + 30,
+                PanelWidth      = source.PanelWidth,
+                PanelHeight     = source.PanelHeight,
+                TitleBarColor   = source.TitleBarColor,
+                ControlClass    = source.ControlClass,   // ← required: PanelControlFactory needs this
+                LaunchTarget    = source.LaunchTarget,   // ← required: double-click modal launch
+                HasSaveButton   = source.HasSaveButton,
+                Version         = source.Version,
+                SortOrder       = source.SortOrder + 1
             };
 
             await InsertAsync(clone);

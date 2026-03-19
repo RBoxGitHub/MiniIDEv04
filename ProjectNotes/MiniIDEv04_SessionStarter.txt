@@ -1,136 +1,232 @@
 MiniIDEv04 — Session Starter
-Last Updated: March 17, 2026
+
+Last Updated: March 18, 2026
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 PROJECT OVERVIEW
+
 ────────────────
+
 MiniIDEv04 is a WPF-based mini IDE shell built in .NET / C#.
+
 It uses SQLite (sqlite-net-pcl) as the single source of truth for all runtime
 state — panels, notes, settings, git log, drop log.
+
 UI is driven by CommunityToolkit.Mvvm source generators.
+
 Telerik controls (Windows11 theme) are used for UI components.
+
 GitHub repo: https://github.com/RBoxGitHub/MiniIDEv04
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-CURRENT PHASE: Phase 2
+CURRENT PHASE: Phase 3
+
 ────────────────────────
+
 Phase 1 — COMPLETE
-  - DraggablePanel (IDraggablePanel interface, PanelDragBehavior)
-  - PanelManagerService + SysPanelViewModel (ObservableObject)
-  - PanelControlFactory (maps ControlClass string → UserControl)
-  - ProjectDatabase.Initialize() with migrations & seeds
-  - All repository interfaces + SQLite implementations
-  - MainWindow dynamic panel spawn from sys_Panels
-  - Launcher panels: SysManagerLauncher, GitHubLauncher, DropZoneLauncher
-  - Modal windows: ThingsToDoWindow, SysManagerWindow, GitHubPushWindow, DropZoneWindow
-  - QuickAddPanelControl (inline note entry)
-  - ZipDropService (zip deploy pipeline)
-  - ProjectViewModel wired with RelayCommands
 
-Phase 2 — IN PROGRESS (next items to build)
-  1. Thumb.DragCompleted handler — save panel SIZE to sys_Panels on resize end
-     File: Controls/DraggablePanel.xaml.cs  |  Priority: 2
-  2. Dynamic panel spawn for CLONED panels — PanelManagerService.CloneAsync()
-     inserts the DB row but Canvas child must be created programmatically in MainWindow
-     File: Services/PanelManagerService.cs  |  Priority: 2
-  3. sys_ToolboxGroups, sys_ToolboxEntries, sys_Libraries tables
-  4. LibraryScanner — Tier 1 reflection scanner
-  5. ToolboxRegistry
-  6. RadPanelBar wired to toolbox entries
-  7. DLL drop-in folder watcher — Tier 2
+- DraggablePanel (IDraggablePanel interface, PanelDragBehavior)
+- PanelManagerService + SysPanelViewModel (ObservableObject)
+- PanelControlFactory (maps ControlClass string → UserControl)
+- ProjectDatabase.Initialize() with migrations & seeds
+- All repository interfaces + SQLite implementations
+- MainWindow dynamic panel spawn from sys_Panels
+- Launcher panels: SysManagerLauncher, GitHubLauncher, DropZoneLauncher, ToolboxLauncher
+- Modal windows: ThingsToDoWindow, SysManagerWindow, GitHubPushWindow, DropZoneWindow, ToolboxWindow
+- QuickAddPanelControl (inline note entry)
+- ZipDropService (zip deploy pipeline + progress bar + save log)
+- DropZoneSummaryWindow (deploy summary popup + Build Now button)
+- ProjectViewModel wired with RelayCommands
 
-Phase 3 — FUTURE
-  - XamlRenderer (XamlReader.Load two-pass)
-  - RoslynCompiler (CSharpCompilation + dynamic assembly refs)
-  - XmlnsInjector
-  - Tier 3 live control registration
+Phase 2 — COMPLETE
+
+- Thumb.DragCompleted → save panel SIZE to sys_Panels on resize end
+- Dynamic Canvas spawn for CLONED panels (CollectionChanged + SpawnSinglePanel)
+- CloneAsync bug fix (ControlClass + LaunchTarget now copied on clone)
+- sys_ToolboxGroups, sys_ToolboxEntries, sys_Libraries tables + seeds
+- ToolboxLauncherControl + ToolboxWindow (plain WPF, no Telerik)
+- LibraryScanner — Tier 1 reflection scanner (PresentationFramework + Telerik)
+- ToolboxRegistry — loads FilteredGroups, ApplyFilter, ReloadAsync
+- ToolboxGroupViewModel + ToolboxEntryViewModel (Label, Tooltip, Header)
+- RadPanelBar wired to ToolboxRegistry.FilteredGroups in MainWindow + ToolboxWindow
+- DllWatcherService — FileSystemWatcher Tier 2 with debounce + progress + log
+- IDllWatcherRepository + SqliteDllWatcherRepository
+- Live search filtering across both toolbox locations
+- ZipDropService manifest parsing fix + Guid format bug fix
+- DropZone progress bar (per-file narrative + save log checkbox)
+
+Phase 3 — IN PROGRESS (next items to build)
+
+1. XmlnsInjector
+   - Builds xmlns map from sys_ToolboxEntries XmlNamespace values
+   - Injects correct xmlns declarations into XAML before rendering
+   File: Services/XmlnsInjector.cs | Priority: 1
+
+2. XamlRenderer (XamlReader.Load two-pass)
+   - Pass 1: try XamlReader.Load on snippet + xmlns map
+   - Pass 2: fallback with relaxed parsing if Pass 1 fails
+   - Renders live into PreviewHost ContentPresenter in MainWindow
+   File: Services/XamlRenderer.cs | Priority: 1
+
+3. Toolbox drag-to-canvas
+   - Drag ToolboxEntryViewModel from RadPanelBar onto PreviewHost
+   - Insert DefaultXamlSnippet at drop position
+   - Wire DragDrop events in MainWindow + ToolboxWindow
+   File: Views/MainWindow.xaml + Controls/ | Priority: 2
+
+4. RoslynCompiler (CSharpCompilation + dynamic assembly refs)
+   - Compile C# code-behind entered in the CodeEditor pane
+   - Dynamic assembly references from sys_Libraries
+   File: Services/RoslynCompiler.cs | Priority: 2
+
+5. Tier 3 live control registration
+   - Register dynamically compiled controls back into ToolboxRegistry
+   File: Services/ToolboxRegistry.cs (update) | Priority: 3
 
 Phase 4 — FUTURE
-  - ProjectSerializer (.wpfproj JSON zip)
-  - SlnGenerator (.sln + .csproj templates)
-  - Dapper / SQL Server layer for exported project DBs only
+
+- ProjectSerializer (.wpfproj JSON zip)
+- SlnGenerator (.sln + .csproj templates)
+- Dapper / SQL Server layer for exported project DBs only
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 PROJECT STRUCTURE
+
 ─────────────────
+
 MiniIDEv04/
 ├── Controls/
-│   ├── DraggablePanel.xaml/.cs         — Base draggable panel host
-│   ├── IDraggablePanel.cs              — Interface all panels implement
-│   ├── PanelDragBehavior.cs            — Drag logic
-│   ├── QuickAddPanelControl.xaml/.cs   — Inline quick-note bar
-│   ├── SysManagerLauncherControl       — 📝 Notes launcher
-│   ├── SysManagerPanelControl          — ⚙ Sys Manager launcher
-│   ├── GitHubLauncherControl           — 🐙 GitHub launcher
-│   ├── GitHubPushPanelControl          — GitHub push panel
-│   └── DropZoneLauncherControl         — 📦 Drop Zone launcher
+│   ├── DraggablePanel.xaml/.cs
+│   ├── IDraggablePanel.cs
+│   ├── PanelDragBehavior.cs
+│   ├── QuickAddPanelControl.xaml/.cs
+│   ├── SysManagerLauncherControl.xaml/.cs
+│   ├── SysManagerPanelControl.xaml/.cs
+│   ├── GitHubLauncherControl.xaml/.cs
+│   ├── GitHubPushPanelControl.xaml/.cs
+│   ├── DropZoneLauncherControl.xaml/.cs
+│   └── ToolboxLauncherControl.xaml/.cs
 ├── Converters/
 │   └── IntOffsetConverter.cs
 ├── Data/
-│   ├── ProjectDatabase.cs              — Init, migrations, seeds
-│   ├── Interfaces/                     — IRepository, ISysPanelRepository, etc.
-│   └── Sqlite/                         — SqliteSysPanelRepository, etc.
+│   ├── ProjectDatabase.cs
+│   ├── Interfaces/
+│   │   ├── IRepository.cs
+│   │   ├── IThingsToDoRepository.cs
+│   │   ├── ISysPanelRepository.cs
+│   │   ├── IAppSettingsRepository.cs
+│   │   ├── ISysControlRepository.cs
+│   │   ├── ISysGitLogRepository.cs
+│   │   ├── ISysDropLogRepository.cs
+│   │   ├── ILibraryScannerRepository.cs
+│   │   ├── IToolboxRepository.cs
+│   │   └── IDllWatcherRepository.cs
+│   └── Sqlite/
+│       ├── SqliteThingsToDoRepository.cs
+│       ├── SqliteSysPanelRepository.cs
+│       ├── SqliteAppSettingsRepository.cs
+│       ├── SqliteSysControlRepository.cs
+│       ├── SqliteGitLogRepository.cs
+│       ├── SqliteDropLogRepository.cs
+│       ├── SqliteLibraryScannerRepository.cs
+│       ├── SqliteToolboxRepository.cs
+│       └── SqliteDllWatcherRepository.cs
 ├── Models/
-│   ├── SysPanel.cs                     — sys_Panels table
-│   ├── ThingsToDo.cs                   — sys_ThingsToDo table
-│   ├── SysAppSetting.cs                — sys_AppSettings table
+│   ├── SysPanel.cs
+│   ├── ThingsToDo.cs
+│   ├── SysAppSetting.cs
 │   ├── SysControl.cs / SysControlProperty.cs
 │   ├── SysDropLog.cs / SysGitLog.cs
-│   └── KnownControlType.cs
+│   ├── KnownControlType.cs
+│   ├── SysLibrary.cs
+│   ├── SysToolboxGroup.cs
+│   └── SysToolboxEntry.cs
 ├── Services/
-│   ├── PanelManagerService.cs          — Manages panel state + SysPanelViewModel
-│   ├── PanelControlFactory.cs          — Maps ControlClass → UserControl
+│   ├── PanelManagerService.cs
+│   ├── PanelControlFactory.cs
 │   ├── ControlTypeRegistry.cs
-│   └── ZipDropService.cs               — Zip deploy pipeline
+│   ├── ZipDropService.cs
+│   ├── LibraryScanner.cs
+│   ├── ToolboxRegistry.cs
+│   └── DllWatcherService.cs
 ├── ViewModels/
-│   └── ProjectViewModel.cs             — Main VM, ObservableObject, RelayCommands
+│   ├── ProjectViewModel.cs
+│   └── ToolboxGroupViewModel.cs
 ├── Views/
-│   ├── MainWindow.xaml/.cs             — FloatingCanvas, dynamic panel spawn
+│   ├── MainWindow.xaml/.cs
 │   ├── ThingsToDoWindow.xaml/.cs
 │   ├── SysManagerWindow.xaml/.cs
 │   ├── GitHubPushWindow.xaml/.cs
-│   └── DropZoneWindow.xaml/.cs
+│   ├── DropZoneWindow.xaml/.cs
+│   ├── DropZoneSummaryWindow.xaml/.cs
+│   └── ToolboxWindow.xaml/.cs
 ├── ProjectNotes/
-│   ├── miniIDE.db                      — SQLite DB (pushed with every commit)
-│   ├── ClaudeRules.md                  — Session rules (same as remote)
-│   └── MiniIDEv04_SessionStarter.txt   — THIS FILE
-└── ZipDrop/                            — Zip deploy working folder
+│   ├── miniIDE.db
+│   ├── ClaudeRules.md
+│   └── MiniIDEv04_SessionStarter.txt
+└── ZipDrop/
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 KEY CONVENTIONS
+
 ───────────────
+
 - Namespace: MiniIDEv04 (always match project name)
 - All data access via repository classes ONLY — never SQLiteConnection directly in UI
 - All new panels: implement IDraggablePanel, register in PanelControlFactory, add seed in ProjectDatabase
 - All new DB tables: add CreateTable<T>() call in ProjectDatabase.Initialize()
 - DB path: ProjectNotes/miniIDE.db (relative to AppContext.BaseDirectory)
 - CommunityToolkit.Mvvm: use [ObservableProperty] and [RelayCommand] source generators
+- [RelayCommand] requires PRIVATE methods — public methods must be called directly
+- No Telerik controls in modal/popup windows — plain WPF only (black window issue)
+- EnableDefaultItems=False in .csproj — every new file MUST be added manually
 - ProjectRootPath (in sys_AppSettings): D:\GrokCryptoTrack\Production-Claude\MiniIDE-WorkFolder\MiniIDEv04
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 REGISTERED PANELS (sys_Panels seeds)
+
 ──────────────────────────────────────
-PanelKey               ControlClass                  LaunchTarget        Color
-QuickAddPanel          QuickAddPanelControl          —                   #FF37474F
-SysManagerLauncher     SysManagerLauncherControl     ThingsToDoWindow    #FF37474F
-SysManagerPanel        SysManagerPanelControl        SysManagerWindow    #FF1A237E
-GitHubLauncher         GitHubLauncherControl         GitHubPushWindow    #FF1B5E20
-DropZoneLauncher       DropZoneLauncherControl       DropZoneWindow      #FF4A148C
+
+PanelKey             ControlClass                  LaunchTarget        Color
+QuickAddPanel        QuickAddPanelControl          —                   #FF37474F
+SysManagerLauncher   SysManagerLauncherControl     ThingsToDoWindow    #FF37474F
+SysManagerPanel      SysManagerPanelControl        SysManagerWindow    #FF1A237E
+GitHubLauncher       GitHubLauncherControl         GitHubPushWindow    #FF1B5E20
+DropZoneLauncher     DropZoneLauncherControl       DropZoneWindow      #FF4A148C
+ToolboxLauncher      ToolboxLauncherControl        ToolboxWindow       #FF006064
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TOOLBOX STATE
+
+─────────────
+
+- sys_ToolboxGroups:  6 groups (Layout, Input, Display, Data, Navigation, Telerik)
+- sys_ToolboxEntries: 32 seeded entries (Tier 0) + Tier 1 from LibraryScanner
+- sys_Libraries:      2 entries (WPF_Builtin, Telerik_WPF)
+- DLL watch folder:   ZipDrop (relative to AppContext.BaseDirectory)
+- Tier 0 = seeded/built-in | Tier 1 = reflection-scanned | Tier 2 = DLL drop-in
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 SESSION RULES REMINDER
+
 ───────────────────────
+
 - Always confirm the plan before writing any code
 - One task at a time — check in between features
 - File delivery: individual files if 4 or fewer; zip if 5+
 - Always include _manifest.json in every zip
 - Always include a drop checklist .txt with every delivery
+- Always include updated MiniIDEv04.csproj in every zip
 - Suggest GitHub push at end of productive session
 - miniIDE.db is pushed with every commit
+- [RelayCommand] = private methods only
+- No Telerik in popup windows — use plain WPF
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

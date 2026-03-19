@@ -3,24 +3,24 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation"
         Title="📦 Drop Zone — File Deployer"
-        Width="920" Height="580"
-        MinWidth="700" MinHeight="440"
+        Width="920" Height="640"
+        MinWidth="700" MinHeight="480"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         ResizeMode="CanResizeWithGrip">
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>  <!-- Header -->
-            <RowDefinition Height="*"/>     <!-- Body split -->
-            <RowDefinition Height="Auto"/>  <!-- Footer -->
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
+        <!-- ── Header ──────────────────────────────────────────────── -->
         <Border Grid.Row="0" Background="#FF4A148C" Padding="12,8">
             <DockPanel>
                 <TextBlock DockPanel.Dock="Left"
-                           Text="📦  Drop Zone — Claude File Deployer"
+                           Text="📦 Drop Zone — Claude File Deployer"
                            Foreground="White" FontSize="12"
                            FontWeight="SemiBold" VerticalAlignment="Center"/>
                 <TextBlock x:Name="FileCountText"
@@ -30,7 +30,7 @@
             </DockPanel>
         </Border>
 
-        <!-- Body -->
+        <!-- ── Body ────────────────────────────────────────────────── -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="220" MinWidth="160"/>
@@ -51,29 +51,21 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Folder header -->
                     <Border Grid.Row="0" Background="#FF6A1B9A" Padding="8,6">
                         <TextBlock Text="📂 Zip Work Folder"
-                                   Foreground="White" FontSize="10"
-                                   FontWeight="SemiBold"/>
+                                   Foreground="White" FontSize="10" FontWeight="SemiBold"/>
                     </Border>
 
-                    <!-- Folder path -->
                     <TextBox Grid.Row="1"
                              x:Name="ZipFolderBox"
-                             IsReadOnly="True"
-                             FontSize="8"
+                             IsReadOnly="True" FontSize="8"
                              Background="#FFF0E8FF"
                              BorderThickness="0,0,0,1"
-                             Padding="6,3"
-                             TextWrapping="Wrap"/>
+                             Padding="6,3" TextWrapping="Wrap"/>
 
-                    <!-- Zip file list -->
                     <ListBox Grid.Row="2"
                              x:Name="ZipFileList"
-                             Background="Transparent"
-                             BorderThickness="0"
-                             Margin="0"
+                             Background="Transparent" BorderThickness="0"
                              SelectionChanged="ZipFileList_SelectionChanged">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
@@ -88,34 +80,31 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
 
-                    <!-- Refresh + Browse folder -->
-                    <WrapPanel Grid.Row="3" Margin="4,4,4,4">
-                        <telerik:RadButton Content="🔄"
-                            Width="30" Height="24" Margin="0,0,4,0"
-                            ToolTip="Refresh zip list"
-                            Click="RefreshZipList_Click"
-                            telerik:StyleManager.Theme="Windows11"/>
-                        <telerik:RadButton Content="📂 Folder"
-                            Height="24" Margin="0"
-                            ToolTip="Change zip work folder"
-                            Click="BrowseZipFolder_Click"
-                            telerik:StyleManager.Theme="Windows11"/>
+                    <WrapPanel Grid.Row="3" Margin="4">
+                        <telerik:RadButton Content="🔄" Width="30" Height="24"
+                                           Margin="0,0,4,0" ToolTip="Refresh zip list"
+                                           Click="RefreshZipList_Click"
+                                           telerik:StyleManager.Theme="Windows11"/>
+                        <telerik:RadButton Content="📂 Folder" Height="24"
+                                           ToolTip="Change zip work folder"
+                                           Click="BrowseZipFolder_Click"
+                                           telerik:StyleManager.Theme="Windows11"/>
                     </WrapPanel>
                 </Grid>
             </Border>
 
             <!-- Splitter -->
-            <GridSplitter Grid.Column="1"
-                          Width="5"
-                          HorizontalAlignment="Stretch"
-                          Background="#FFE0E0E0"/>
+            <GridSplitter Grid.Column="1" Width="5"
+                          HorizontalAlignment="Stretch" Background="#FFE0E0E0"/>
 
-            <!-- RIGHT: Zip controls + results -->
+            <!-- RIGHT: controls + results + build output -->
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>  <!-- Zip file row -->
-                    <RowDefinition Height="Auto"/>  <!-- Project root row -->
-                    <RowDefinition Height="*"/>     <!-- Results grid -->
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="140"/>
                 </Grid.RowDefinitions>
 
                 <!-- Zip file row -->
@@ -129,23 +118,18 @@
                     <TextBlock Grid.Column="0" Text="Zip File:"
                                VerticalAlignment="Center"
                                FontWeight="SemiBold" FontSize="10"/>
-                    <TextBox Grid.Column="1"
-                             x:Name="ZipPathBox"
-                             IsReadOnly="True"
-                             Background="#FFF0F8FF"
-                             Padding="4,2"
-                             VerticalAlignment="Center"
+                    <TextBox Grid.Column="1" x:Name="ZipPathBox"
+                             IsReadOnly="True" Background="#FFF0F8FF"
+                             Padding="4,2" VerticalAlignment="Center"
                              Margin="0,0,4,0"/>
-                    <telerik:RadButton Grid.Column="2"
-                        Content="📂 Browse..."
-                        Margin="0,0,4,0"
-                        Click="BrowseZip_Click"
-                        telerik:StyleManager.Theme="Windows11"/>
-                    <telerik:RadButton Grid.Column="3"
-                        Content="⚙ Process Zip"
-                        Style="{StaticResource AddButtonStyle}"
-                        Click="ProcessZip_Click"
-                        ToolTip="Read manifest and deploy files to project"/>
+                    <telerik:RadButton Grid.Column="2" Content="📂 Browse..."
+                                       Margin="0,0,4,0" Click="BrowseZip_Click"
+                                       telerik:StyleManager.Theme="Windows11"/>
+                    <telerik:RadButton Grid.Column="3" Content="⚙ Process Zip"
+                                       x:Name="ProcessZipButton"
+                                       Style="{StaticResource AddButtonStyle}"
+                                       Click="ProcessZip_Click"
+                                       ToolTip="Read manifest and deploy files to project"/>
                 </Grid>
 
                 <!-- Project root row -->
@@ -158,68 +142,133 @@
                     <TextBlock Grid.Column="0" Text="Project Root:"
                                VerticalAlignment="Center"
                                FontWeight="SemiBold" FontSize="10"/>
-                    <TextBox Grid.Column="1"
-                             x:Name="ProjectRootBox"
-                             Background="#FFFFF9E6"
-                             Padding="4,2"
-                             VerticalAlignment="Center"
-                             Margin="0,0,4,0"/>
-                    <telerik:RadButton Grid.Column="2"
-                        Content="📂 Browse..."
-                        Click="BrowseRoot_Click"
-                        telerik:StyleManager.Theme="Windows11"/>
+                    <TextBox Grid.Column="1" x:Name="ProjectRootBox"
+                             Background="#FFFFF9E6" Padding="4,2"
+                             VerticalAlignment="Center" Margin="0,0,4,0"/>
+                    <telerik:RadButton Grid.Column="2" Content="📂 Browse..."
+                                       Click="BrowseRoot_Click"
+                                       telerik:StyleManager.Theme="Windows11"/>
                 </Grid>
 
                 <!-- Results grid -->
                 <telerik:RadGridView Grid.Row="2"
-                    x:Name="ResultsGrid"
-                    Margin="8,0,8,8"
-                    AutoGenerateColumns="False"
-                    telerik:StyleManager.Theme="Windows11"
-                    AlternateRowBackground="#FFE8F4FD"
-                    AlternationCount="2"
-                    IsReadOnly="True"
-                    RowIndicatorVisibility="Collapsed"
-                    SelectionMode="Single">
+                                     x:Name="ResultsGrid"
+                                     Margin="8,0,8,4"
+                                     AutoGenerateColumns="False"
+                                     telerik:StyleManager.Theme="Windows11"
+                                     AlternateRowBackground="#FFE8F4FD"
+                                     AlternationCount="2"
+                                     IsReadOnly="True"
+                                     RowIndicatorVisibility="Collapsed"
+                                     SelectionMode="Single">
                     <telerik:RadGridView.Columns>
-                        <telerik:GridViewDataColumn
-                            DataMemberBinding="{Binding Status}"
-                            Header="Status" Width="80"/>
-                        <telerik:GridViewDataColumn
-                            DataMemberBinding="{Binding FileName}"
-                            Header="File" Width="200"/>
-                        <telerik:GridViewDataColumn
-                            DataMemberBinding="{Binding Destination}"
-                            Header="Destination" Width="160"/>
-                        <telerik:GridViewDataColumn
-                            DataMemberBinding="{Binding FullDestPath}"
-                            Header="Full Path" Width="*"/>
+                        <telerik:GridViewDataColumn DataMemberBinding="{Binding Status}"
+                                                    Header="Status" Width="80"/>
+                        <telerik:GridViewDataColumn DataMemberBinding="{Binding FileName}"
+                                                    Header="File" Width="200"/>
+                        <telerik:GridViewDataColumn DataMemberBinding="{Binding Destination}"
+                                                    Header="Destination" Width="160"/>
+                        <telerik:GridViewDataColumn DataMemberBinding="{Binding FullDestPath}"
+                                                    Header="Full Path" Width="*"/>
                     </telerik:RadGridView.Columns>
                 </telerik:RadGridView>
+
+                <!-- Build output header -->
+                <Border Grid.Row="3"
+                        x:Name="BuildOutputHeader"
+                        Background="#FF263238" Padding="8,4"
+                        Visibility="Collapsed">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Left"
+                                   Text="🔨 Build Output"
+                                   Foreground="White" FontSize="10"
+                                   FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="BuildResultText"
+                                   DockPanel.Dock="Right"
+                                   FontSize="10" FontWeight="SemiBold"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Right"/>
+                    </DockPanel>
+                </Border>
+
+                <!-- Build output TextBox -->
+                <TextBox Grid.Row="4"
+                         x:Name="BuildOutputBox"
+                         Margin="8,0,8,4"
+                         Background="#FF1E272C" Foreground="#FF80CBC4"
+                         FontFamily="Consolas" FontSize="10"
+                         IsReadOnly="True"
+                         VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Auto"
+                         TextWrapping="NoWrap"
+                         BorderThickness="1" BorderBrush="#FF37474F"
+                         Padding="6" Visibility="Collapsed"/>
             </Grid>
         </Grid>
 
-        <!-- Footer -->
+        <!-- ── Footer ──────────────────────────────────────────────── -->
         <Border Grid.Row="2"
                 Background="#FFF5F5F5"
                 BorderBrush="#FFE0E0E0"
                 BorderThickness="0,1,0,0"
                 Padding="8,6">
-            <DockPanel>
-                <telerik:RadButton DockPanel.Dock="Right"
-                    Content="Close" Width="80"
-                    telerik:StyleManager.Theme="Windows11"
-                    Click="Close_Click"/>
-                <telerik:RadButton DockPanel.Dock="Right"
-                    Content="🗑 Clear Log" Width="90"
-                    Margin="0,0,8,0"
-                    telerik:StyleManager.Theme="Windows11"
-                    Click="ClearLog_Click"/>
-                <TextBlock x:Name="StatusText"
-                    VerticalAlignment="Center" FontSize="11"
-                    Foreground="#FF555555"
-                    Text="Select a zip from the folder browser or browse manually"/>
-            </DockPanel>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Progress row — visible only during processing -->
+                <Grid Grid.Row="0"
+                      x:Name="ProgressPanel"
+                      Visibility="Collapsed"
+                      Margin="0,0,0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="40"/>
+                    </Grid.ColumnDefinitions>
+                    <ProgressBar Grid.Column="0"
+                                 x:Name="DeployProgressBar"
+                                 Height="8" Minimum="0" Maximum="100" Value="0"
+                                 Foreground="#FF6A1B9A" Background="#FFE0E0E0"
+                                 BorderThickness="0"/>
+                    <TextBlock Grid.Column="1"
+                               x:Name="ProgressPctText"
+                               FontSize="9" Foreground="#FF666666"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               Margin="4,0,0,0"/>
+                </Grid>
+
+                <!-- Status + checkbox + buttons row -->
+                <DockPanel Grid.Row="1">
+                    <telerik:RadButton DockPanel.Dock="Right"
+                                       Content="Close" Width="80"
+                                       telerik:StyleManager.Theme="Windows11"
+                                       Click="Close_Click"/>
+                    <telerik:RadButton DockPanel.Dock="Right"
+                                       Content="🗑 Clear Log" Width="90"
+                                       Margin="0,0,8,0"
+                                       telerik:StyleManager.Theme="Windows11"
+                                       Click="ClearLog_Click"/>
+
+                    <!-- Save log checkbox -->
+                    <CheckBox DockPanel.Dock="Right"
+                              x:Name="SaveLogCheckBox"
+                              Content="💾 Save process log"
+                              FontSize="10"
+                              VerticalAlignment="Center"
+                              Margin="0,0,12,0"
+                              IsChecked="True"
+                              ToolTip="Save a .log file to the ZipDrop folder after each deploy"/>
+
+                    <TextBlock x:Name="StatusText"
+                               VerticalAlignment="Center" FontSize="11"
+                               Foreground="#FF555555"
+                               Text="Select a zip from the folder browser or browse manually"/>
+                </DockPanel>
+            </Grid>
         </Border>
+
     </Grid>
 </Window>

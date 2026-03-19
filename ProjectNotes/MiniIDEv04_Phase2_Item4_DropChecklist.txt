@@ -1,0 +1,104 @@
+MiniIDEv04 — Phase 2 Item 4 Drop Checklist
+Session: March 18, 2026
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FILES TO DROP (7 files — individual delivery, no zip required)
+────────────────────────────────────────────────────────────────
+
+NEW FILES
+──────────
+
+[ ] 1. Data\Interfaces\ILibraryScannerRepository.cs
+        DROP INTO: MiniIDEv04\Data\Interfaces\
+
+[ ] 2. Data\Sqlite\SqliteLibraryScannerRepository.cs
+        DROP INTO: MiniIDEv04\Data\Sqlite\
+
+[ ] 3. Services\LibraryScanner.cs
+        DROP INTO: MiniIDEv04\Services\
+
+UPDATED FILES
+─────────────
+
+[ ] 4. ViewModels\ProjectViewModel.cs
+        REPLACES: existing ProjectViewModel.cs
+        WHAT CHANGED:
+          - Added LibraryScanner _scanner field
+          - Added IsScanning, ScanStatus, ScanProgress observable properties
+          - Added ScanLibrariesCommand — runs scanner, reports progress to UI
+
+[ ] 5. Views\ToolboxWindow.xaml
+        REPLACES: existing ToolboxWindow.xaml
+        WHAT CHANGED:
+          - Added 🔍 Scan Libraries button in header
+          - Added scan progress panel (hidden until scan starts)
+          - Added ProgressBar + status text wired to VM properties
+          - Window height increased to 640 to accommodate progress panel
+
+[ ] 6. Views\ToolboxWindow.xaml.cs
+        REPLACES: existing ToolboxWindow.xaml.cs
+        WHAT CHANGED:
+          - OnLoaded wires to ProjectViewModel via Owner.DataContext
+          - PropertyChanged subscription updates scan button + progress UI
+          - ScanButton_Click fires ScanLibrariesCommand on VM
+          - OnClosed unsubscribes PropertyChanged to prevent memory leak
+
+[ ] 7. MiniIDEv04.csproj
+        REPLACES: existing MiniIDEv04.csproj
+        WHAT CHANGED:
+          - Added ILibraryScannerRepository.cs
+          - Added SqliteLibraryScannerRepository.cs
+          - Added LibraryScanner.cs
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FILES NOT CHANGED — DO NOT REPLACE
+────────────────────────────────────
+  All model files (SysLibrary, SysToolboxGroup, SysToolboxEntry)
+  Controls\ToolboxLauncherControl.xaml + .cs
+  Services\PanelControlFactory.cs
+  Data\ProjectDatabase.cs
+  Views\MainWindow.xaml + .cs
+  Models\* (all)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DROP SEQUENCE
+─────────────
+  1. Data\Interfaces\ILibraryScannerRepository.cs
+  2. Data\Sqlite\SqliteLibraryScannerRepository.cs
+  3. Services\LibraryScanner.cs
+  4. ViewModels\ProjectViewModel.cs
+  5. Views\ToolboxWindow.xaml
+  6. Views\ToolboxWindow.xaml.cs
+  7. MiniIDEv04.csproj  (root of project)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+POST-DROP TEST CHECKLIST
+─────────────────────────
+  [ ] Build — confirm 0 errors
+  [ ] Run app — double-click 🧰 Toolbox launcher
+  [ ] Confirm Toolbox window opens with groups + 🔍 Scan Libraries button
+  [ ] Click 🔍 Scan Libraries
+  [ ] Confirm button changes to ⏳ Scanning... and progress bar appears
+  [ ] Confirm scan completes and status shows entries added count
+  [ ] Check DB — sys_ToolboxEntries should have new Tier=1 rows
+  [ ] Check DB — sys_Libraries.LastScannedAt should be populated
+  [ ] Push to GitHub
+
+Suggested commit message:
+  MiniIDEv04 — Mar 18 2026 — Phase 2 Item 4 — LibraryScanner Tier 1 reflection
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PHASE 2 STATUS
+───────────────
+  [x] Item 1 — Resize save to sys_Panels           COMPLETE
+  [x] Item 2 — Dynamic Canvas spawn for clones     COMPLETE
+  [x] Item 3 — Toolbox tables, seeds, launcher     COMPLETE
+  [x] Item 4 — LibraryScanner (Tier 1 reflection)  COMPLETE ← this drop
+  [ ] Item 5 — ToolboxRegistry
+  [ ] Item 6 — RadPanelBar wired to toolbox entries
+  [ ] Item 7 — DLL drop-in folder watcher (Tier 2)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

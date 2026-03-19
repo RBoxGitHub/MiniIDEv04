@@ -24,17 +24,10 @@
 
   <!-- ── NuGet packages ──────────────────────────────────────────────── -->
   <ItemGroup>
-    <!-- Telerik — local install feed (NuGet.Config points to local path) -->
     <PackageReference Include="Telerik.UI.for.Wpf.80.Xaml"     Version="2026.1.211" />
-
-    <!-- SQLite — local sys_ tables only, never SQL Server -->
     <PackageReference Include="sqlite-net-pcl"                  Version="1.9.172" />
     <PackageReference Include="SQLitePCLRaw.bundle_green"       Version="2.1.10" />
-
-    <!-- MVVM -->
     <PackageReference Include="CommunityToolkit.Mvvm"           Version="8.3.2" />
-
-    <!-- Roslyn — wired in Phase 3 -->
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp"   Version="4.12.0" />
   </ItemGroup>
 
@@ -45,6 +38,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
 
+    <!-- Views -->
     <Page Include="Views\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -57,6 +51,24 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Views\DropZoneWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\GitHubPushWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\ToolboxWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\DropZoneSummaryWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+
+    <!-- Controls -->
     <Page Include="Controls\DraggablePanel.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -81,11 +93,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\DropZoneWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Views\GitHubPushWindow.xaml">
+    <Page Include="Controls\ToolboxLauncherControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -125,6 +133,10 @@
       <DependentUpon>GitHubLauncherControl.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Controls\ToolboxLauncherControl.xaml.cs">
+      <DependentUpon>ToolboxLauncherControl.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
 
     <!-- Data -->
     <Compile Include="Data\ProjectDatabase.cs" />
@@ -135,12 +147,20 @@
     <Compile Include="Data\Interfaces\ISysControlRepository.cs" />
     <Compile Include="Data\Interfaces\ISysGitLogRepository.cs" />
     <Compile Include="Data\Interfaces\ISysDropLogRepository.cs" />
+    <Compile Include="Data\Interfaces\ILibraryScannerRepository.cs" />
+    <Compile Include="Data\Interfaces\IToolboxRepository.cs" />
+    <!-- Phase 2 Item 7 -->
+    <Compile Include="Data\Interfaces\IDllWatcherRepository.cs" />
     <Compile Include="Data\Sqlite\SqliteThingsToDoRepository.cs" />
     <Compile Include="Data\Sqlite\SqliteSysPanelRepository.cs" />
     <Compile Include="Data\Sqlite\SqliteAppSettingsRepository.cs" />
     <Compile Include="Data\Sqlite\SqliteSysControlRepository.cs" />
     <Compile Include="Data\Sqlite\SqliteGitLogRepository.cs" />
     <Compile Include="Data\Sqlite\SqliteDropLogRepository.cs" />
+    <Compile Include="Data\Sqlite\SqliteLibraryScannerRepository.cs" />
+    <Compile Include="Data\Sqlite\SqliteToolboxRepository.cs" />
+    <!-- Phase 2 Item 7 -->
+    <Compile Include="Data\Sqlite\SqliteDllWatcherRepository.cs" />
 
     <!-- Models -->
     <Compile Include="Models\ThingsToDo.cs" />
@@ -151,18 +171,26 @@
     <Compile Include="Models\KnownControlType.cs" />
     <Compile Include="Models\SysGitLog.cs" />
     <Compile Include="Models\SysDropLog.cs" />
+    <Compile Include="Models\SysLibrary.cs" />
+    <Compile Include="Models\SysToolboxGroup.cs" />
+    <Compile Include="Models\SysToolboxEntry.cs" />
 
     <!-- Services -->
     <Compile Include="Services\PanelManagerService.cs" />
     <Compile Include="Services\ControlTypeRegistry.cs" />
     <Compile Include="Services\PanelControlFactory.cs" />
     <Compile Include="Services\ZipDropService.cs" />
+    <Compile Include="Services\LibraryScanner.cs" />
+    <Compile Include="Services\ToolboxRegistry.cs" />
+    <!-- Phase 2 Item 7 -->
+    <Compile Include="Services\DllWatcherService.cs" />
 
     <!-- Converters -->
     <Compile Include="Converters\IntOffsetConverter.cs" />
 
     <!-- ViewModels -->
     <Compile Include="ViewModels\ProjectViewModel.cs" />
+    <Compile Include="ViewModels\ToolboxGroupViewModel.cs" />
 
     <!-- Views -->
     <Compile Include="Views\DropZoneWindow.xaml.cs">
@@ -185,9 +213,17 @@
       <DependentUpon>SysManagerWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Views\ToolboxWindow.xaml.cs">
+      <DependentUpon>ToolboxWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Views\DropZoneSummaryWindow.xaml.cs">
+      <DependentUpon>DropZoneSummaryWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
 
-  <!-- ── Images ──────────────────────────────────────────────────────────── -->
+  <!-- ── Images ──────────────────────────────────────────────────────── -->
   <ItemGroup>
     <Resource Include="Images\wrench.svg"/>
   </ItemGroup>

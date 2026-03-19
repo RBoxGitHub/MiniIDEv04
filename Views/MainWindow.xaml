@@ -12,6 +12,31 @@
         <vm:ProjectViewModel/>
     </Window.DataContext>
 
+    <Window.Resources>
+        <!-- ── Toolbox entry item template ──────────────────────────── -->
+        <DataTemplate x:Key="ToolboxEntryTemplate">
+            <Border Padding="4,3"
+                    Background="Transparent"
+                    Cursor="Hand">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#FFE8F4FD"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <TextBlock Text="{Binding Label}"
+                           FontSize="11"
+                           Foreground="#FF222222"
+                           ToolTip="{Binding Tooltip}"
+                           TextTrimming="CharacterEllipsis"/>
+            </Border>
+        </DataTemplate>
+
+    </Window.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -20,7 +45,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- ═══ Menu ══════════════════════════════════════════════════════ -->
+        <!-- ═══ Menu ══════════════════════════════════════════════════ -->
         <Menu Grid.Row="0">
             <MenuItem Header="_File">
                 <MenuItem Header="_New Project"  Command="{Binding NewProjectCommand}"/>
@@ -45,7 +70,7 @@
             </MenuItem>
         </Menu>
 
-        <!-- ═══ Toolbar ═══════════════════════════════════════════════════ -->
+        <!-- ═══ Toolbar ═══════════════════════════════════════════════ -->
         <telerik:RadToolBar Grid.Row="1">
             <telerik:RadButton Content="New"         Command="{Binding NewProjectCommand}"/>
             <telerik:RadButton Content="Open"        Command="{Binding OpenProjectCommand}"/>
@@ -56,32 +81,55 @@
             <telerik:RadButton Content="Export .sln" Command="{Binding ExportSlnCommand}"/>
         </telerik:RadToolBar>
 
-        <!-- ═══ Docking + floating overlay ════════════════════════════════ -->
+        <!-- ═══ Docking + floating overlay ════════════════════════════ -->
         <Grid Grid.Row="2">
 
-            <!-- ── RadDocking shell ──────────────────────────────────── -->
             <telerik:RadDocking telerik:StyleManager.Theme="Windows11">
 
                 <!-- LEFT: Project Explorer + Toolbox -->
                 <telerik:RadSplitContainer InitialPosition="DockedLeft" Width="240">
                     <telerik:RadPaneGroup>
+
                         <telerik:RadPane Header="Project Explorer">
                             <telerik:RadTreeView telerik:StyleManager.Theme="Windows11"/>
                         </telerik:RadPane>
+
                         <telerik:RadPane Header="Toolbox">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
-                                <telerik:RadWatermarkTextBox Grid.Row="0"
+
+                                <!-- Search box -->
+                                <telerik:RadWatermarkTextBox
+                                    Grid.Row="0"
+                                    x:Name="ToolboxSearchBox"
                                     WatermarkContent="Search controls..."
-                                    Margin="4"/>
-                                <telerik:RadPanelBar Grid.Row="1"
-                                    ItemsSource="{Binding ToolboxGroups}"
+                                    Margin="4"
+                                    TextChanged="ToolboxSearch_TextChanged"
                                     telerik:StyleManager.Theme="Windows11"/>
+
+                                <!-- RadPanelBar bound to ToolboxGroups -->
+                                <telerik:RadPanelBar
+                                    Grid.Row="1"
+                                    x:Name="MainToolboxPanelBar"
+                                    ItemsSource="{Binding ToolboxGroups}"
+                                    telerik:StyleManager.Theme="Windows11">
+                                    <telerik:RadPanelBar.ItemTemplate>
+                                        <HierarchicalDataTemplate
+                                            ItemsSource="{Binding Entries}"
+                                            ItemTemplate="{StaticResource ToolboxEntryTemplate}">
+                                            <TextBlock Text="{Binding Header}"
+                                                       FontSize="11"
+                                                       FontWeight="SemiBold"/>
+                                        </HierarchicalDataTemplate>
+                                    </telerik:RadPanelBar.ItemTemplate>
+                                </telerik:RadPanelBar>
+
                             </Grid>
                         </telerik:RadPane>
+
                     </telerik:RadPaneGroup>
                 </telerik:RadSplitContainer>
 
@@ -90,11 +138,11 @@
                     <telerik:RadPaneGroup x:Name="DocumentHost">
                         <telerik:RadPane Header="XAML">
                             <telerik:RadSyntaxEditor x:Name="XamlEditor"
-                                telerik:StyleManager.Theme="Windows11"/>
+                                                     telerik:StyleManager.Theme="Windows11"/>
                         </telerik:RadPane>
                         <telerik:RadPane Header="C# Code-Behind">
                             <telerik:RadSyntaxEditor x:Name="CodeEditor"
-                                telerik:StyleManager.Theme="Windows11"/>
+                                                     telerik:StyleManager.Theme="Windows11"/>
                         </telerik:RadPane>
                     </telerik:RadPaneGroup>
                 </telerik:RadSplitContainer>
@@ -113,27 +161,23 @@
                         </telerik:RadPane>
                         <telerik:RadPane Header="Properties">
                             <telerik:RadPropertyGrid x:Name="PropertyGrid"
-                                telerik:StyleManager.Theme="Windows11"/>
+                                                     telerik:StyleManager.Theme="Windows11"/>
                         </telerik:RadPane>
                     </telerik:RadPaneGroup>
                 </telerik:RadSplitContainer>
 
-                <!-- BOTTOM docked pane removed — quick-add is now a DraggablePanel -->
-
             </telerik:RadDocking>
 
-            <!-- ── Floating panel canvas overlay ─────────────────────── -->
-            <!-- Canvas is intentionally empty at design time.           -->
-            <!-- PanelControlFactory spawns all panels at runtime        -->
-            <!-- from sys_Panels rows via SpawnPanelsFromDb().           -->
+            <!-- Floating panel canvas overlay -->
             <Canvas x:Name="FloatingCanvas"
                     Panel.ZIndex="100"
                     IsHitTestVisible="True"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"/>
+
         </Grid>
 
-        <!-- ═══ Status bar ════════════════════════════════════════════════ -->
+        <!-- ═══ Status bar ════════════════════════════════════════════ -->
         <StatusBar Grid.Row="3">
             <StatusBarItem>
                 <TextBlock Text="{Binding StatusMessage}"/>

@@ -21,22 +21,22 @@ namespace MiniIDEv04.Services
         {
             IDraggablePanel? control = panel.ControlClass switch
             {
-                "QuickAddPanelControl"      => new QuickAddPanelControl(),
-                "SysManagerLauncherControl" => new SysManagerLauncherControl(),
-                "SysManagerPanelControl"    => new SysManagerPanelControl(),
-                "GitHubLauncherControl"     => new GitHubLauncherControl(),
-                "DropZoneLauncherControl"   => new DropZoneLauncherControl(),
-                _                           => null
+                "QuickAddPanelControl"       => new QuickAddPanelControl(),
+                "SysManagerLauncherControl"  => new SysManagerLauncherControl(),
+                "SysManagerPanelControl"     => new SysManagerPanelControl(),
+                "GitHubLauncherControl"      => new GitHubLauncherControl(),
+                "DropZoneLauncherControl"    => new DropZoneLauncherControl(),
+                "ToolboxLauncherControl"     => new ToolboxLauncherControl(),
+                _                            => null
             };
 
             if (control is null) return null;
-
             if (control is not FrameworkElement fe) return null;
 
             // Set size and visibility immediately
-            fe.Width            = panel.PanelWidth;
-            fe.MinHeight        = panel.PanelHeight;
-            fe.Visibility       = panel.IsVisible ? Visibility.Visible : Visibility.Collapsed;
+            fe.Width          = panel.PanelWidth;
+            fe.MinHeight      = panel.PanelHeight;
+            fe.Visibility     = panel.IsVisible ? Visibility.Visible : Visibility.Collapsed;
             fe.IsHitTestVisible = panel.IsVisible;
 
             // Defer PanelKey, PanelTitle, TitleBarBrush until after
