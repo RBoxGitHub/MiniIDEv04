@@ -13,7 +13,7 @@
     </Window.DataContext>
 
     <Window.Resources>
-        <!-- ── Toolbox entry item template ──────────────────────────── -->
+        <!-- ── Toolbox entry item template ─────────Note From RBox─────────────────── -->
         <DataTemplate x:Key="ToolboxEntryTemplate">
             <Border Padding="4,3"
                     Background="Transparent"
