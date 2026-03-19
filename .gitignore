@@ -416,3 +416,4 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+!ProjectNotes/MiniIDEv04_SessionStarter.txt
