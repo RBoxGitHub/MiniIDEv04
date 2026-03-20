@@ -13,6 +13,8 @@
     </Window.DataContext>
 
     <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
         <!-- ── Toolbox entry item template ─────────Note From RBox─────────────────── -->
         <DataTemplate x:Key="ToolboxEntryTemplate">
             <Border Padding="4,3"
@@ -89,7 +91,21 @@
                    Grid.Row="2"
                    Orientation="Horizontal"
                    Height="20"
-                   Background="Cornsilk"/>
+                   Background="Cornsilk">
+            <Button Content="▶ Compile"
+                    Command="{Binding CompileCodeCommand}"
+                    FontSize="11"
+                    Padding="6,0"
+                    Margin="2,0"
+                    Height="18"
+                    VerticalAlignment="Center"/>
+            <TextBlock Text="⏳ Compiling..."
+                       FontSize="11"
+                       VerticalAlignment="Center"
+                       Margin="4,0"
+                       Foreground="#FF795548"
+                       Visibility="{Binding IsCompiling, Converter={StaticResource BoolToVis}}"/>
+        </WrapPanel>
 
         <!-- ═══ Docking + floating overlay ════════════════════════════ -->
         <Grid Grid.Row="3">
@@ -177,6 +193,22 @@
                         <telerik:RadPane Header="Properties">
                             <telerik:RadPropertyGrid x:Name="PropertyGrid"
                                                      telerik:StyleManager.Theme="Windows11"/>
+                        </telerik:RadPane>
+                        <telerik:RadPane Header="Output">
+                            <TextBox Text="{Binding CompileOutput, Mode=OneWay}"
+                                     IsReadOnly="True"
+                                     FontFamily="Consolas"
+                                     FontSize="11"
+                                     Foreground="#FF212121"
+                                     Background="#FFFFFDE7"
+                                     BorderThickness="0"
+                                     VerticalScrollBarVisibility="Auto"
+                                     HorizontalScrollBarVisibility="Auto"
+                                     TextWrapping="NoWrap"
+                                     AcceptsReturn="True"
+                                     Padding="4"
+                                     VerticalAlignment="Stretch"
+                                     HorizontalAlignment="Stretch"/>
                         </telerik:RadPane>
                     </telerik:RadPaneGroup>
                 </telerik:RadSplitContainer>

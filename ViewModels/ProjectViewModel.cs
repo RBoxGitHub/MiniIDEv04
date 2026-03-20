@@ -13,9 +13,10 @@ namespace MiniIDEv04.ViewModels
     public partial class ProjectViewModel : ObservableObject
     {
         // ── Services ──────────────────────────────────────────────────────
-        private readonly IThingsToDoRepository  _todoRepo = new SqliteThingsToDoRepository();
-        private readonly IAppSettingsRepository _settings = new SqliteAppSettingsRepository();
-        private readonly LibraryScanner         _scanner  = new();
+        private readonly IThingsToDoRepository    _todoRepo = new SqliteThingsToDoRepository();
+        private readonly IAppSettingsRepository  _settings = new SqliteAppSettingsRepository();
+        private readonly LibraryScanner          _scanner  = new();
+        private readonly RoslynCompiler          _compiler = new(new SqliteLibraryScannerRepository());
 
         public PanelManagerService PanelManager    { get; } = new();
         public ToolboxRegistry     ToolboxRegistry { get; } = new();
@@ -50,6 +51,10 @@ namespace MiniIDEv04.ViewModels
         [ObservableProperty] private bool   _isWatcherActive  = false;
         [ObservableProperty] private string _watcherStatus    = "DLL watcher not started";
         [ObservableProperty] private string _watchFolder      = string.Empty;
+
+        // ── Compile state ─────────────────────────────────────────────────
+        [ObservableProperty] private bool   _isCompiling   = false;
+        [ObservableProperty] private string _compileOutput = string.Empty;
 
         // ── Status ────────────────────────────────────────────────────────
         [ObservableProperty] private string _statusMessage = "Ready";
@@ -326,6 +331,64 @@ namespace MiniIDEv04.ViewModels
             catch (Exception ex)
             {
                 StatusMessage = $"❌ Render failed: {ex.Message}";
+            }
+        }
+
+        // ── Compile (Phase 3) ─────────────────────────────────────────────
+
+        /// <summary>
+        /// Set by MainWindow at startup — returns current text from CodeEditor.
+        /// Mirrors the XamlContentProvider pattern used by RunPreview.
+        /// </summary>
+        public Func<string>? CodeContentProvider { get; set; }
+
+        [RelayCommand]
+        private async Task CompileCode()
+        {
+            if (IsCompiling) return;
+
+            var source = CodeContentProvider?.Invoke() ?? ActiveCodeBehind;
+
+            if (string.IsNullOrWhiteSpace(source))
+            {
+                CompileOutput = "⚠ Nothing to compile — enter C# code in the editor first.";
+                StatusMessage = "⚠ Compile skipped — empty editor.";
+                return;
+            }
+
+            IsCompiling   = true;
+            CompileOutput = "⏳ Compiling...";
+            StatusMessage = "⏳ Compiling C# code...";
+
+            try
+            {
+                var result = await _compiler.CompileAsync(source);
+
+                if (result.Success)
+                {
+                    var warnings = result.Diagnostics.Count;
+                    CompileOutput = warnings > 0
+                        ? $"✅ Compilation succeeded — {warnings} warning(s):\n\n" +
+                          string.Join("\n", result.Diagnostics)
+                        : "✅ Compilation succeeded — no warnings.";
+
+                    StatusMessage = $"✅ Compile succeeded — {result.Assembly!.GetTypes().Length} type(s) emitted.";
+                }
+                else
+                {
+                    CompileOutput = $"❌ Compilation failed — {result.Diagnostics.Count} error(s):\n\n" +
+                                   string.Join("\n", result.Diagnostics);
+                    StatusMessage = $"❌ Compile failed — {result.Diagnostics.Count} error(s).";
+                }
+            }
+            catch (Exception ex)
+            {
+                CompileOutput = $"❌ Unexpected error: {ex.Message}";
+                StatusMessage = "❌ Compile threw an unexpected error.";
+            }
+            finally
+            {
+                IsCompiling = false;
             }
         }
 

@@ -20,5 +20,9 @@ namespace MiniIDEv04.Models
 
         /// <summary>Full git output captured from stdout/stderr</summary>
         public string GitOutput { get; set; } = string.Empty;
+
+        /// <summary>Display string for the Success flag — used in Git Log tab.</summary>
+        [Ignore]
+        public string SuccessDisplay => Success ? "✅" : "❌";
     }
 }

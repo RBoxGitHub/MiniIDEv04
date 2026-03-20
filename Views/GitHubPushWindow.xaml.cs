@@ -1,8 +1,10 @@
 using MiniIDEv04.Data.Sqlite;
+using MiniIDEv04.Models;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace MiniIDEv04.Views
 {
@@ -30,6 +32,36 @@ namespace MiniIDEv04.Views
 
         private static string DefaultCommitMessage()
             => $"MiniIDEv04 — {DateTime.Now:MMM dd yyyy HH:mm:ss}";
+
+        // ── Tab selection ─────────────────────────────────────────────────
+
+        private async void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (sender is TabControl tc && tc.SelectedItem is TabItem tab
+                && tab.Header?.ToString() == "Git Log")
+            {
+                await LoadGitLogAsync();
+            }
+        }
+
+        // ── Git Log ───────────────────────────────────────────────────────
+
+        private async Task LoadGitLogAsync()
+        {
+            try
+            {
+                GitLogStatus.Text = "Loading...";
+                var entries = await _gitLog.GetRecentAsync(50);
+                GitLogList.ItemsSource = entries;
+                GitLogStatus.Text = entries.Count == 0
+                    ? "No pushes logged yet."
+                    : $"{entries.Count} push(es) — most recent first";
+            }
+            catch (Exception ex)
+            {
+                GitLogStatus.Text = $"❌ Could not load log: {ex.Message}";
+            }
+        }
 
         // ── Commit + Push (header button) ─────────────────────────────────
 

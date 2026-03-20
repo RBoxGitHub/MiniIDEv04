@@ -17,18 +17,18 @@
     <None Include="ProjectNotes\**\*">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
-    <Compile          Remove="ProjectNotes\**" />
+    <Compile Remove="ProjectNotes\**" />
     <EmbeddedResource Remove="ProjectNotes\**" />
-    <Content          Remove="ProjectNotes\**" />
+    <Content Remove="ProjectNotes\**" />
   </ItemGroup>
 
   <!-- ── NuGet packages ──────────────────────────────────────────────── -->
   <ItemGroup>
-    <PackageReference Include="Telerik.UI.for.Wpf.80.Xaml"     Version="2026.1.211" />
-    <PackageReference Include="sqlite-net-pcl"                  Version="1.9.172" />
-    <PackageReference Include="SQLitePCLRaw.bundle_green"       Version="2.1.10" />
-    <PackageReference Include="CommunityToolkit.Mvvm"           Version="8.3.2" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp"   Version="4.12.0" />
+    <PackageReference Include="Telerik.UI.for.Wpf.80.Xaml" Version="2026.1.211" />
+    <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
+    <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.10" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
   </ItemGroup>
 
   <!-- ── Application + Pages ─────────────────────────────────────────── -->
@@ -174,6 +174,7 @@
     <Compile Include="Models\SysLibrary.cs" />
     <Compile Include="Models\SysToolboxGroup.cs" />
     <Compile Include="Models\SysToolboxEntry.cs" />
+    <Compile Include="Models\RoslynCompileResult.cs" />
 
     <!-- Services -->
     <Compile Include="Services\PanelManagerService.cs" />
@@ -187,6 +188,7 @@
     <!-- Phase 3 Item 1 -->
     <Compile Include="Services\XmlnsInjector.cs" />
     <Compile Include="Services\XamlRenderer.cs" />
+    <Compile Include="Services\RoslynCompiler.cs" />
 
     <!-- Converters -->
     <Compile Include="Converters\IntOffsetConverter.cs" />
@@ -228,7 +230,7 @@
 
   <!-- ── Images ──────────────────────────────────────────────────────── -->
   <ItemGroup>
-    <Resource Include="Images\wrench.svg"/>
+    <Resource Include="Images\wrench.svg" />
   </ItemGroup>
 
   <!-- ── Seed SQL (visible in Solution Explorer, not compiled) ────────── -->

@@ -13,6 +13,8 @@ namespace MiniIDEv04.Views
     {
         private ProjectViewModel _vm => (ProjectViewModel)DataContext;
         private readonly Dictionary<string, IDraggablePanel> _panels = new();
+        private string _xamlEditorText = string.Empty;
+        private string _codeEditorText = string.Empty;
 
         public MainWindow()
         {
@@ -26,7 +28,21 @@ namespace MiniIDEv04.Views
 
             _vm.PanelManager.Panels.CollectionChanged += Panels_CollectionChanged;
             _vm.PreviewReady        += OnPreviewReady;
-            _vm.XamlContentProvider  = () => XamlEditor.Document?.ToString() ?? string.Empty;
+            _vm.XamlContentProvider  = () => _xamlEditorText;
+            _vm.CodeContentProvider  = () => _codeEditorText;
+
+            // RadSyntaxEditor document text tracking via TextContentChanged (confirmed Telerik API)
+            // Read text by casting sender back to the document and using its CurrentSnapshot
+            XamlEditor.Document.TextContentChanged += (s, e) =>
+            {
+                if (s is Telerik.Windows.SyntaxEditor.Core.Text.TextDocument doc)
+                    _xamlEditorText = doc.CurrentSnapshot.GetText();
+            };
+            CodeEditor.Document.TextContentChanged += (s, e) =>
+            {
+                if (s is Telerik.Windows.SyntaxEditor.Core.Text.TextDocument doc)
+                    _codeEditorText = doc.CurrentSnapshot.GetText();
+            };
 
             SpawnPanelsFromDb();
         }
