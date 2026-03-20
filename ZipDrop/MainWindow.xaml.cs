@@ -24,8 +24,7 @@ namespace MiniIDEv04.Views
             await _vm.InitializeAsync();
 
             _vm.PanelManager.Panels.CollectionChanged += Panels_CollectionChanged;
-            _vm.PreviewReady        += OnPreviewReady;
-            _vm.XamlContentProvider  = () => XamlEditor.Document?.ToString() ?? string.Empty;
+            _vm.PreviewReady += OnPreviewReady;
 
             SpawnPanelsFromDb();
         }
@@ -153,6 +152,22 @@ namespace MiniIDEv04.Views
         private void OnPreviewReady(object? sender, UIElement element)
         {
             PreviewHost.Content = element;
+        }
+
+        // ── XamlEditor sync ───────────────────────────────────────────
+        // Keeps ProjectViewModel.ActiveXaml in step with what the user
+        // types in the RadSyntaxEditor so RunPreviewCommand always has
+        // the latest content.
+
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+            XamlEditor.TextChanged += XamlEditor_TextChanged;
+        }
+
+        private void XamlEditor_TextChanged(object? sender, EventArgs e)
+        {
+            _vm.ActiveXaml = XamlEditor.Document?.ToString() ?? string.Empty;
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)

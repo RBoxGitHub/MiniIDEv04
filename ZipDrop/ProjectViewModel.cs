@@ -6,7 +6,6 @@ using MiniIDEv04.Data.Sqlite;
 using MiniIDEv04.Models;
 using MiniIDEv04.Services;
 using System.Collections.ObjectModel;
-using System.Windows;
 
 namespace MiniIDEv04.ViewModels
 {
@@ -289,37 +288,35 @@ namespace MiniIDEv04.ViewModels
 
         // ── Preview (Phase 3) ─────────────────────────────────────────────
 
+        /// <summary>
+        /// XamlRenderer instance — lazily created on first preview run.
+        /// Exposed so MainWindow can await RenderAsync and push result to PreviewHost.
+        /// </summary>
         public XamlRenderer? Renderer { get; private set; }
 
-        public event EventHandler<UIElement>? PreviewReady;
-
         /// <summary>
-        /// Set by MainWindow at startup — returns current text from RadSyntaxEditor.
-        /// Avoids needing TextChanged event which RadSyntaxEditor does not expose.
+        /// Raised when a render result is ready.
+        /// MainWindow subscribes and sets PreviewHost.Content.
         /// </summary>
-        public Func<string>? XamlContentProvider { get; set; }
+        public event EventHandler<UIElement>? PreviewReady;
 
         [RelayCommand]
         private async Task RunPreview()
         {
-            // Pull content from editor at render time via injected delegate
-            var xaml = XamlContentProvider?.Invoke() ?? ActiveXaml;
-
-            if (string.IsNullOrWhiteSpace(xaml))
+            if (string.IsNullOrWhiteSpace(ActiveXaml))
             {
                 StatusMessage = "⚠ Nothing to preview — paste XAML into the editor first.";
                 return;
             }
 
-            ActiveXaml = xaml;
-
+            // Lazy-create renderer
             Renderer ??= new XamlRenderer(new Data.Sqlite.SqliteToolboxRepository());
 
             StatusMessage = "⏳ Rendering preview...";
 
             try
             {
-                var element = await Renderer.RenderAsync(xaml);
+                var element = await Renderer.RenderAsync(ActiveXaml);
                 PreviewReady?.Invoke(this, element);
                 StatusMessage = "✅ Preview updated.";
             }

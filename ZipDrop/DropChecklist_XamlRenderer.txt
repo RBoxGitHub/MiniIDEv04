@@ -1,0 +1,51 @@
+MiniIDEv04 — Drop Checklist
+Phase 3 | Delivery: XamlRenderer
+Date: 2026-03-19
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FILES DELIVERED (5 — replace all)
+──────────────────────────────────
+[ ] XamlRenderer.cs       →  MiniIDEv04/Services/XamlRenderer.cs         (NEW)
+[ ] ProjectViewModel.cs   →  MiniIDEv04/ViewModels/ProjectViewModel.cs    (MODIFIED)
+[ ] MainWindow.xaml.cs    →  MiniIDEv04/Views/MainWindow.xaml.cs          (MODIFIED)
+[ ] MiniIDEv04.csproj     →  MiniIDEv04/MiniIDEv04.csproj                 (MODIFIED)
+
+WHAT CHANGED
+────────────
+XamlRenderer.cs (NEW)
+  - Pass 1: XmlnsInjector.InjectXmlns → XamlReader.Load
+  - Pass 2: WrapInRoot (synthetic Border with all xmlns) → XamlReader.Load
+  - Returns styled error panel on failure — never throws to caller
+  - InvalidateXmlnsCache() — call after toolbox reload
+
+ProjectViewModel.cs (MODIFIED)
+  - RunPreview() stub replaced with async implementation
+  - Lazy-creates XamlRenderer on first run
+  - Fires PreviewReady event with rendered UIElement
+  - ActiveXaml property already existed — used as XAML source
+
+MainWindow.xaml.cs (MODIFIED)
+  - Subscribes to _vm.PreviewReady in OnContentRendered
+  - OnPreviewReady handler sets PreviewHost.Content
+  - XamlEditor.TextChanged syncs editor text → _vm.ActiveXaml
+  - Wired in OnSourceInitialized (safe — after XAML is loaded)
+
+MiniIDEv04.csproj (MODIFIED)
+  - Added: <Compile Include="Services\XamlRenderer.cs" />
+
+NOTES
+─────
+- XamlReader.Load MUST run on the UI thread — RenderAsync is awaited
+  from RunPreviewCommand which is always invoked on the UI thread
+- RadSyntaxEditor.TextChanged event signature may need verification
+  against your Telerik version — check if the event arg type differs
+- InvalidateXmlnsCache() should be called from OnDllScanned in
+  ProjectViewModel after a new DLL is scanned (Phase 3 follow-up)
+
+NEXT STEP
+─────────
+Phase 3 Priority 2 — Toolbox drag-to-canvas
+  Drag ToolboxEntryViewModel from RadPanelBar onto PreviewHost
+  Insert DefaultXamlSnippet at drop position
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

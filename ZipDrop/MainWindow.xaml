@@ -144,8 +144,12 @@
 
               
                 <!-- CENTER: Editors -->
-                <telerik:RadSplitContainer MinWidth="200">
+                <telerik:RadSplitContainer MinWidth="200" >
+                    
                     <telerik:RadPaneGroup x:Name="DocumentHost">
+                
+                        <TextBlock Text="Open documents will appear here." FontStyle="Italic" Foreground="#FF666666"/>
+                        
                         <telerik:RadPane Header="XAML">
                             <telerik:RadSyntaxEditor x:Name="XamlEditor"
                                                      telerik:StyleManager.Theme="Windows11"/>
