@@ -1,6 +1,6 @@
 MiniIDEv04 — Session Starter
 
-Last Updated: March 19, 2026
+Last Updated: March 20, 2026 4:41 PM
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -85,12 +85,26 @@ Phase 3 — IN PROGRESS
      outer Grid Row=2 between toolbar and docking area
    File: Views/MainWindow.xaml + ViewModels/ProjectViewModel.cs
 
-5. RoslynCompiler (CSharpCompilation + dynamic assembly refs) — NEXT
-   - Compile C# code-behind entered in the CodeEditor pane
-   - Dynamic assembly references from sys_Libraries
-   File: Services/RoslynCompiler.cs | Priority: 2
+5. RoslynCompiler — COMPLETE
+   - Compiles C# source from CodeEditor pane via CSharpCompilation
+   - Dynamic assembly refs from sys_Libraries (IsScanEnabled + IsLoaded flags)
+   - Returns RoslynCompileResult (Success, Assembly?, Diagnostics)
+   - Never throws to caller — all errors surfaced in result object
+   - Compile button in ActionStrip + Output pane in right panel
+   - CodeContentProvider wired in MainWindow (same pattern as XamlContentProvider)
+   - Editor text tracked via TextContentChanged + CurrentSnapshot.GetText()
+   Files: Services/RoslynCompiler.cs | Models/RoslynCompileResult.cs
+          ViewModels/ProjectViewModel.cs | Views/MainWindow.xaml + .cs
+   NuGet: Microsoft.CodeAnalysis.CSharp 4.9.2
 
-6. Tier 3 live control registration — FUTURE
+6. GitHubPushWindow Git Log tab — COMPLETE
+   - Added Push / Git Log TabControl to GitHubPushWindow
+   - Git Log tab lazy-loads on first click via TabControl_SelectionChanged
+   - Shows last 50 pushes (Date, Message, Tag, Status) ordered most-recent-first
+   - SysGitLog.SuccessDisplay computed property added ([Ignore] for SQLite)
+   Files: Views/GitHubPushWindow.xaml + .cs | Models/SysGitLog.cs
+
+7. Tier 3 live control registration — NEXT
    - Register dynamically compiled controls back into ToolboxRegistry
    File: Services/ToolboxRegistry.cs (update) | Priority: 3
 
@@ -152,7 +166,8 @@ MiniIDEv04/
 │   ├── KnownControlType.cs
 │   ├── SysLibrary.cs
 │   ├── SysToolboxGroup.cs
-│   └── SysToolboxEntry.cs
+│   ├── SysToolboxEntry.cs
+│   └── RoslynCompileResult.cs    ← Phase 3
 ├── Services/
 │   ├── PanelManagerService.cs
 │   ├── PanelControlFactory.cs
@@ -162,7 +177,8 @@ MiniIDEv04/
 │   ├── ToolboxRegistry.cs
 │   ├── DllWatcherService.cs
 │   ├── XmlnsInjector.cs          ← Phase 3
-│   └── XamlRenderer.cs           ← Phase 3
+│   ├── XamlRenderer.cs           ← Phase 3
+│   └── RoslynCompiler.cs         ← Phase 3
 ├── Utiltities/                    ← batch files for sync/deploy
 ├── ViewModels/
 │   ├── ProjectViewModel.cs
@@ -203,16 +219,28 @@ RADSYNTAXEDITOR KNOWN API (Telerik 2026.1.211)
 ───────────────────────────────────────────────
 
 - XamlEditor.Document.Insert(int offset, string text)  ← confirmed working
-- XamlEditor.Document.Inserted  ← event
-- XamlEditor.Document.Deleted   ← event
-- XamlEditor.Document.TextContentChanged  ← event
+- XamlEditor.Document.TextContentChanged  ← confirmed working (fires on every edit)
 - XamlEditor.Document.PreviewTextContentChanged  ← event
+- XamlEditor.Document.CurrentSnapshot.GetText()  ← confirmed working (gets full text content)
 - XamlEditor.Document.ReplaceNextMatch(string, int, string, bool, bool)  ← search/replace only
-- XamlEditor.Document.ToString()  ← gets full text content
+- XamlEditor.Document.ToString()  ← returns TYPE NAME, not content — do NOT use for text
+- XamlEditor.Document.Inserted  ← does NOT exist on TextDocument
+- XamlEditor.Document.Deleted   ← does NOT exist on TextDocument
 - XamlEditor.TextChanged  ← does NOT exist
 - XamlEditor.CaretOffset  ← does NOT exist
 - XamlEditor.Document.Load(stream)  ← does NOT exist
 - XamlEditor.Document.Replace(int, int, string)  ← does NOT exist
+
+EDITOR TEXT READ PATTERN (confirmed working):
+
+  // Wire once in OnContentRendered:
+  XamlEditor.Document.TextContentChanged += (s, e) =>
+  {
+      if (s is Telerik.Windows.SyntaxEditor.Core.Text.TextDocument doc)
+          _xamlEditorText = doc.CurrentSnapshot.GetText();
+  };
+  // Provide to ViewModel via delegate:
+  _vm.XamlContentProvider = () => _xamlEditorText;
 
 ZIP DELIVERY CONVENTIONS
 
