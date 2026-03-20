@@ -17,7 +17,9 @@
         <DataTemplate x:Key="ToolboxEntryTemplate">
             <Border Padding="4,3"
                     Background="Transparent"
-                    Cursor="Hand">
+                    Cursor="Hand"
+                    PreviewMouseLeftButtonDown="ToolboxEntry_PreviewMouseLeftButtonDown"
+                    PreviewMouseMove="ToolboxEntry_PreviewMouseMove">
                 <Border.Style>
                     <Style TargetType="Border">
                         <Style.Triggers>
@@ -148,6 +150,9 @@
                     <telerik:RadPaneGroup x:Name="DocumentHost">
                         <telerik:RadPane Header="XAML">
                             <telerik:RadSyntaxEditor x:Name="XamlEditor"
+                                                     AllowDrop="True"
+                                                     Drop="XamlEditor_Drop"
+                                                     DragOver="XamlEditor_DragOver"
                                                      telerik:StyleManager.Theme="Windows11"/>
                         </telerik:RadPane>
                         <telerik:RadPane Header="C# Code-Behind">

@@ -4,6 +4,7 @@ using MiniIDEv04.ViewModels;
 using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Telerik.Windows.Controls;
 
 namespace MiniIDEv04.Views
@@ -146,6 +147,89 @@ namespace MiniIDEv04.Views
             await _vm.PanelManager.LoadAsync();
             SpawnPanelsFromDb();
             _vm.StatusMessage = "Panel layout refreshed from DB.";
+        }
+
+        // ── Toolbox drag-to-editor ────────────────────────────────────
+
+        private Point _dragStartPoint;
+        private bool  _isDragging = false;
+
+        private void ToolboxEntry_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
+
+            var pos   = e.GetPosition(null);
+            var delta = _dragStartPoint - pos;
+
+            if (Math.Abs(delta.X) < SystemParameters.MinimumHorizontalDragDistance &&
+                Math.Abs(delta.Y) < SystemParameters.MinimumVerticalDragDistance)
+                return;
+
+            if (_isDragging) return;
+
+            // Walk up to find the Border with the DataContext
+            var border = sender as Border;
+            if (border?.DataContext is not ToolboxEntryViewModel entry) return;
+
+            _isDragging = true;
+
+            try
+            {
+                var data = new DataObject("ToolboxEntry", entry);
+                DragDrop.DoDragDrop(border, data, DragDropEffects.Copy);
+            }
+            finally
+            {
+                _isDragging = false;
+            }
+        }
+
+        private void ToolboxEntry_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            _dragStartPoint = e.GetPosition(null);
+        }
+
+        private void XamlEditor_DragOver(object sender, DragEventArgs e)
+        {
+            e.Effects = e.Data.GetDataPresent("ToolboxEntry")
+                ? DragDropEffects.Copy
+                : DragDropEffects.None;
+            e.Handled = true;
+        }
+
+        private void XamlEditor_Drop(object sender, DragEventArgs e)
+        {
+            if (!e.Data.GetDataPresent("ToolboxEntry")) return;
+
+            var entry = e.Data.GetData("ToolboxEntry") as ToolboxEntryViewModel;
+            if (entry is null) return;
+
+            var snippet = entry.DefaultXamlSnippet;
+            if (string.IsNullOrWhiteSpace(snippet)) return;
+
+            var doc = XamlEditor.Document;
+            if (doc is null) return;
+
+            try
+            {
+                // Always insert at position 0 — safe regardless of document state
+                // Prepend a newline after if content already exists
+                var current    = doc.ToString() ?? string.Empty;
+                var insertText = string.IsNullOrWhiteSpace(current)
+                    ? snippet
+                    : snippet + Environment.NewLine;
+
+                doc.Insert(0, insertText);
+
+                _vm.ActiveXaml    = doc.ToString() ?? string.Empty;
+                _vm.StatusMessage = $"✅ Dropped: {entry.DisplayName}";
+            }
+            catch (Exception ex)
+            {
+                _vm.StatusMessage = $"⚠ Drop failed: {ex.Message}";
+            }
+
+            e.Handled = true;
         }
 
         // ── Preview ───────────────────────────────────────────────────

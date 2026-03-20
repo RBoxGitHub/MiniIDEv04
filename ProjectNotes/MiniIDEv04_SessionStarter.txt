@@ -1,6 +1,6 @@
 MiniIDEv04 — Session Starter
 
-Last Updated: March 18, 2026
+Last Updated: March 19, 2026
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -57,31 +57,40 @@ Phase 2 — COMPLETE
 - ZipDropService manifest parsing fix + Guid format bug fix
 - DropZone progress bar (per-file narrative + save log checkbox)
 
-Phase 3 — IN PROGRESS (next items to build)
+Phase 3 — IN PROGRESS
 
-1. XmlnsInjector
+1. XmlnsInjector — COMPLETE
    - Builds xmlns map from sys_ToolboxEntries XmlNamespace values
    - Injects correct xmlns declarations into XAML before rendering
-   File: Services/XmlnsInjector.cs | Priority: 1
+   File: Services/XmlnsInjector.cs
 
-2. XamlRenderer (XamlReader.Load two-pass)
+2. XamlRenderer — COMPLETE
    - Pass 1: try XamlReader.Load on snippet + xmlns map
-   - Pass 2: fallback with relaxed parsing if Pass 1 fails
+   - Pass 2: fallback with WrapInRoot if Pass 1 fails
    - Renders live into PreviewHost ContentPresenter in MainWindow
-   File: Services/XamlRenderer.cs | Priority: 1
+   - Error panel returned on failure — never throws to caller
+   File: Services/XamlRenderer.cs
 
-3. Toolbox drag-to-canvas
-   - Drag ToolboxEntryViewModel from RadPanelBar onto PreviewHost
-   - Insert DefaultXamlSnippet at drop position
-   - Wire DragDrop events in MainWindow + ToolboxWindow
-   File: Views/MainWindow.xaml + Controls/ | Priority: 2
+3. Toolbox drag-to-editor — COMPLETE
+   - Drag ToolboxEntryViewModel from RadPanelBar onto XamlEditor
+   - Inserts DefaultXamlSnippet at position 0 in document
+   - Wired via PreviewMouseLeftButtonDown + PreviewMouseMove on ToolboxEntryTemplate Border
+   - DragOver + Drop handlers on RadSyntaxEditor (XamlEditor)
+   File: Views/MainWindow.xaml + Views/MainWindow.xaml.cs
 
-4. RoslynCompiler (CSharpCompilation + dynamic assembly refs)
+4. UI improvements — COMPLETE
+   - Title bar now shows: MiniIDE — <AppVersion>  |  <ProjectRootPath>
+     Bound to TitleDisplay property in ProjectViewModel
+   - Cornsilk ActionStrip WrapPanel (Horizontal, Height=20) added to
+     outer Grid Row=2 between toolbar and docking area
+   File: Views/MainWindow.xaml + ViewModels/ProjectViewModel.cs
+
+5. RoslynCompiler (CSharpCompilation + dynamic assembly refs) — NEXT
    - Compile C# code-behind entered in the CodeEditor pane
    - Dynamic assembly references from sys_Libraries
    File: Services/RoslynCompiler.cs | Priority: 2
 
-5. Tier 3 live control registration
+6. Tier 3 live control registration — FUTURE
    - Register dynamically compiled controls back into ToolboxRegistry
    File: Services/ToolboxRegistry.cs (update) | Priority: 3
 
@@ -151,7 +160,10 @@ MiniIDEv04/
 │   ├── ZipDropService.cs
 │   ├── LibraryScanner.cs
 │   ├── ToolboxRegistry.cs
-│   └── DllWatcherService.cs
+│   ├── DllWatcherService.cs
+│   ├── XmlnsInjector.cs          ← Phase 3
+│   └── XamlRenderer.cs           ← Phase 3
+├── Utiltities/                    ← batch files for sync/deploy
 ├── ViewModels/
 │   ├── ProjectViewModel.cs
 │   └── ToolboxGroupViewModel.cs
@@ -185,6 +197,32 @@ KEY CONVENTIONS
 - No Telerik controls in modal/popup windows — plain WPF only (black window issue)
 - EnableDefaultItems=False in .csproj — every new file MUST be added manually
 - ProjectRootPath (in sys_AppSettings): D:\GrokCryptoTrack\Production-Claude\MiniIDE-WorkFolder\MiniIDEv04
+
+RADSYNTAXEDITOR KNOWN API (Telerik 2026.1.211)
+
+───────────────────────────────────────────────
+
+- XamlEditor.Document.Insert(int offset, string text)  ← confirmed working
+- XamlEditor.Document.Inserted  ← event
+- XamlEditor.Document.Deleted   ← event
+- XamlEditor.Document.TextContentChanged  ← event
+- XamlEditor.Document.PreviewTextContentChanged  ← event
+- XamlEditor.Document.ReplaceNextMatch(string, int, string, bool, bool)  ← search/replace only
+- XamlEditor.Document.ToString()  ← gets full text content
+- XamlEditor.TextChanged  ← does NOT exist
+- XamlEditor.CaretOffset  ← does NOT exist
+- XamlEditor.Document.Load(stream)  ← does NOT exist
+- XamlEditor.Document.Replace(int, int, string)  ← does NOT exist
+
+ZIP DELIVERY CONVENTIONS
+
+─────────────────────────
+
+- Always use folder structure in zip (never -j flag) so ZipDropService routes correctly
+- Folder structure: Services\, ViewModels\, Views\, etc. matching project layout
+- Always include _manifest.json in every zip
+- Always include a drop checklist .txt with every delivery
+- Always include updated MiniIDEv04.csproj in every zip
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -228,6 +266,6 @@ SESSION RULES REMINDER
 - miniIDE.db is pushed with every commit
 - [RelayCommand] = private methods only
 - No Telerik in popup windows — use plain WPF
+- Zip files must preserve folder structure — no -j flag
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- 
