@@ -109,7 +109,7 @@ namespace MiniIDEv04.Views
             else if (control is ToolboxLauncherControl tbLauncher)
                 tbLauncher.PanelDoubleClicked += Panel_DoubleClicked;
             else if (control is ProjectZipLauncherControl zipLauncher)
-                zipLauncher.PanelDoubleClicked += Panel_DoubleClicked;
+                zipLauncher.PanelClicked += Panel_ZipClicked;
 
             if (fe is FrameworkElement fwe)
                 fwe.DataContext = _vm;
@@ -143,13 +143,12 @@ namespace MiniIDEv04.Views
 
             Window? win = target switch
             {
-                "ThingsToDoWindow"  => new ThingsToDoWindow  { Owner = this },
-                "SysManagerWindow"  => new SysManagerWindow  { Owner = this },
-                "GitHubPushWindow"  => new GitHubPushWindow  { Owner = this },
-                "DropZoneWindow"    => new DropZoneWindow    { Owner = this },
-                "ToolboxWindow"     => new ToolboxWindow     { Owner = this },
-                "ProjectZipWindow"  => new ProjectZipWindow  { Owner = this },
-                _                   => null
+                "ThingsToDoWindow" => new ThingsToDoWindow  { Owner = this },
+                "SysManagerWindow" => new SysManagerWindow  { Owner = this },
+                "GitHubPushWindow" => new GitHubPushWindow  { Owner = this },
+                "DropZoneWindow"   => new DropZoneWindow    { Owner = this },
+                "ToolboxWindow"    => new ToolboxWindow     { Owner = this },
+                _                  => null
             };
 
             if (win is null) return;

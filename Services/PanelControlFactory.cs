@@ -27,6 +27,7 @@ namespace MiniIDEv04.Services
                 "GitHubLauncherControl"      => new GitHubLauncherControl(),
                 "DropZoneLauncherControl"    => new DropZoneLauncherControl(),
                 "ToolboxLauncherControl"     => new ToolboxLauncherControl(),
+                "ProjectZipLauncherControl"  => new ProjectZipLauncherControl(),
                 _                            => null
             };
 

@@ -67,6 +67,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Views\ProjectZipWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
 
     <!-- Controls -->
     <Page Include="Controls\DraggablePanel.xaml">
@@ -94,6 +98,14 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Controls\ToolboxLauncherControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\ProjectZipLauncherControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\ucProjectZip.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -135,6 +147,14 @@
     </Compile>
     <Compile Include="Controls\ToolboxLauncherControl.xaml.cs">
       <DependentUpon>ToolboxLauncherControl.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Controls\ProjectZipLauncherControl.xaml.cs">
+      <DependentUpon>ProjectZipLauncherControl.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Controls\ucProjectZip.xaml.cs">
+      <DependentUpon>ucProjectZip.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
 
@@ -224,6 +244,10 @@
     </Compile>
     <Compile Include="Views\DropZoneSummaryWindow.xaml.cs">
       <DependentUpon>DropZoneSummaryWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Views\ProjectZipWindow.xaml.cs">
+      <DependentUpon>ProjectZipWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
